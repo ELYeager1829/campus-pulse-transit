@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { LiveMap } from "@/components/LiveMap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,27 +8,31 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeCanvas } from "qrcode.react";
-import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle } from "lucide-react";
+import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/student")({ component: StudentPage });
 
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; eta_minutes: number; delay_minutes: number; }
-interface Bus { id: string; bus_number: string; current_lat: number | null; current_lng: number | null; status: string; }
-interface RouteRow { id: string; name: string; origin: string; destination: string; }
+interface BusRow { id: string; bus_number: string; current_lat: number | null; current_lng: number | null; status: string; }
+interface RouteRow { id: string; name: string; origin: string; destination: string; estimated_duration_min: number; }
 interface Booking { id: string; trip_id: string; qr_code: string; status: string; created_at: string; }
 interface Notif { id: string; title: string; body: string | null; kind: string; read: boolean; created_at: string; }
 
 function StudentPage() {
   const { user } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [buses, setBuses] = useState<Bus[]>([]);
+  const [buses, setBuses] = useState<BusRow[]>([]);
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [confirmTrip, setConfirmTrip] = useState<Trip | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null); // id of just-booked record (for success modal)
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -39,7 +43,7 @@ function StudentPage() {
         user ? supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at",{ascending:false}).limit(8) : Promise.resolve({ data: [] as Notif[] }),
       ]);
       setTrips((t.data ?? []) as Trip[]);
-      setBuses((b.data ?? []) as Bus[]);
+      setBuses((b.data ?? []) as BusRow[]);
       setRoutes((r.data ?? []) as RouteRow[]);
       setNotifs((n.data ?? []) as Notif[]);
       if (user) {
@@ -58,63 +62,113 @@ function StudentPage() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
-  const routeName = (id: string) => routes.find(r => r.id === id)?.name ?? "Route";
-  const busNumber = (id: string) => buses.find(b => b.id === id)?.bus_number ?? "—";
+  const route = (id: string) => routes.find(r => r.id === id);
+  const bus = (id: string) => buses.find(b => b.id === id);
   const activeBuses = buses.filter(b => b.current_lat && b.current_lng).map(b => ({ id: b.id, bus_number: b.bus_number, lat: b.current_lat!, lng: b.current_lng! }));
-  const myActive = bookings.find(b => b.status === "booked");
+  const myActive = useMemo(() => bookings.find(b => b.status === "booked"), [bookings]);
   const myTrip = myActive ? trips.find(t => t.id === myActive.trip_id) : undefined;
+  const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
+  const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
 
-  async function book(trip: Trip) {
+  async function confirmBooking() {
+    if (!user || !confirmTrip) return;
+    const trip = confirmTrip;
+    setSubmitting(true);
+    try {
+      // re-fetch latest trip to validate seats
+      const { data: latest } = await supabase.from("trips").select("*").eq("id", trip.id).single();
+      if (!latest) { toast.error("Trip no longer available"); return; }
+      if (myActive) { toast.error("You already have an active booking"); return; }
+      if (latest.occupancy >= latest.capacity) {
+        const { error } = await supabase.from("waiting_queue").insert({ trip_id: trip.id, user_id: user.id });
+        if (error) toast.error(error.message); else toast.success("Bus full — added to waiting queue");
+        setConfirmTrip(null);
+        return;
+      }
+      const { data: created, error } = await supabase.from("bookings").insert({ trip_id: trip.id, user_id: user.id }).select().single();
+      if (error) { toast.error(error.message); return; }
+      setBookingId(created!.id);
+      setConfirmTrip(null);
+      toast.success("Seat booked successfully");
+    } finally { setSubmitting(false); }
+  }
+
+  async function joinQueue(trip: Trip) {
     if (!user) return;
-    if (trip.occupancy >= trip.capacity) {
-      // join queue
-      const { error } = await supabase.from("waiting_queue").insert({ trip_id: trip.id, user_id: user.id });
-      if (error) toast.error(error.message); else toast.success("Joined waiting queue");
-      return;
-    }
-    const { error } = await supabase.from("bookings").insert({ trip_id: trip.id, user_id: user.id });
-    if (error) toast.error(error.message); else toast.success("Seat booked!");
+    const { error } = await supabase.from("waiting_queue").insert({ trip_id: trip.id, user_id: user.id });
+    if (error) toast.error(error.message); else toast.success("Added to waiting queue");
   }
 
   return (
     <DashboardShell requireRole="student">
       <div className="mb-6">
         <h1 className="font-display text-3xl font-bold">Student dashboard</h1>
-        <p className="text-muted-foreground">Track buses live, book your seat, board with QR.</p>
+        <p className="text-muted-foreground">Browse routes, book your seat, board with QR.</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <Card className="overflow-hidden shadow-soft">
-            <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses</Badge></CardHeader>
+            <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
             <CardContent className="p-0"><LiveMap buses={activeBuses} /></CardContent>
           </Card>
 
           <Card className="shadow-soft">
-            <CardHeader><CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-accent" />Available trips</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-accent" />Available routes</CardTitle>
+              {myActive && <p className="text-xs text-muted-foreground">You already have an active booking — view your ticket on the right.</p>}
+            </CardHeader>
             <CardContent className="space-y-3">
-              {trips.length === 0 && <p className="text-sm text-muted-foreground">No trips right now.</p>}
+              {trips.length === 0 && <p className="text-sm text-muted-foreground">No trips scheduled right now.</p>}
               {trips.map(t => {
+                const r = route(t.route_id);
+                const b = bus(t.bus_id);
+                const remaining = Math.max(0, t.capacity - t.occupancy);
                 const pct = Math.round((t.occupancy / t.capacity) * 100);
-                const full = t.occupancy >= t.capacity;
+                const full = remaining === 0;
+                const delayed = t.delay_minutes > 0;
+                const disabled = !!myActive;
                 return (
-                  <div key={t.id} className="rounded-xl border p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-display font-bold">{busNumber(t.bus_id)}</span>
-                          <Badge variant={full ? "destructive" : "secondary"}>{full ? "FULL" : t.status}</Badge>
-                          {t.delay_minutes > 0 && <Badge variant="outline" className="border-warning text-warning"><AlertTriangle className="mr-1 h-3 w-3" />+{t.delay_minutes}m</Badge>}
+                  <div key={t.id} className="group rounded-2xl border bg-card p-4 transition hover:shadow-soft">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <span className="font-display text-lg font-bold">{r?.name ?? "Route"}</span>
+                          <Badge variant="outline" className="font-mono">{b?.bus_number ?? "—"}</Badge>
+                          {full ? <Badge variant="destructive">Bus Full</Badge> : <Badge variant="secondary" className="capitalize">{t.status}</Badge>}
+                          {delayed && <Badge variant="outline" className="border-warning text-warning"><AlertTriangle className="mr-1 h-3 w-3" />Delayed +{t.delay_minutes}m</Badge>}
                         </div>
-                        <p className="text-sm text-muted-foreground">{routeName(t.route_id)}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="font-medium text-foreground">{r?.origin ?? "—"}</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                          <span className="font-medium text-foreground">{r?.destination ?? "—"}</span>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <div className="flex items-center gap-1 font-display text-xl font-bold"><Clock className="h-4 w-4 text-accent" />{t.eta_minutes}m</div>
+                        <div className="flex items-center justify-end gap-1 font-display text-2xl font-bold"><Clock className="h-5 w-5 text-accent" />{t.eta_minutes}m</div>
                         <p className="text-[11px] uppercase tracking-wider text-muted-foreground">ETA</p>
                       </div>
                     </div>
-                    <div className="mt-3"><Progress value={pct} /><div className="mt-1 flex justify-between text-xs text-muted-foreground"><span><Users className="mr-1 inline h-3 w-3" />{t.occupancy}/{t.capacity}</span><span>{pct}% occupied</span></div></div>
-                    <div className="mt-3"><Button onClick={() => book(t)} className="w-full bg-primary" variant={full ? "outline" : "default"}>{full ? "Join waiting queue" : <><Ticket className="mr-2 h-4 w-4" />Book seat</>}</Button></div>
+
+                    <div className="mt-4">
+                      <Progress value={pct} />
+                      <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{t.occupancy}/{t.capacity} seats</span>
+                        <span className={full ? "font-semibold text-destructive" : "font-semibold text-foreground"}>{full ? "0 seats left" : `${remaining} seats left`}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      {full ? (
+                        <Button onClick={() => joinQueue(t)} disabled={disabled} variant="outline" className="w-full">
+                          <Hourglass className="mr-2 h-4 w-4" />Join waiting queue
+                        </Button>
+                      ) : (
+                        <Button onClick={() => setConfirmTrip(t)} disabled={disabled} className="w-full bg-primary">
+                          <Ticket className="mr-2 h-4 w-4" />Book seat
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -123,16 +177,28 @@ function StudentPage() {
         </div>
 
         <div className="space-y-6">
-          {myActive && myTrip && (
+          {myActive && myTrip ? (
             <Card className="overflow-hidden border-accent/40 shadow-glow">
-              <CardHeader className="bg-amber-gradient text-accent-foreground"><CardTitle>Your boarding pass</CardTitle></CardHeader>
+              <CardHeader className="bg-amber-gradient text-accent-foreground">
+                <CardTitle className="flex items-center justify-between">
+                  <span>Your boarding pass</span>
+                  <Badge variant="secondary" className="bg-white/90 text-foreground">Active</Badge>
+                </CardTitle>
+              </CardHeader>
               <CardContent className="grid place-items-center gap-3 p-6">
-                <div className="rounded-xl bg-white p-3"><QRCodeCanvas value={myActive.qr_code} size={160} /></div>
+                <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={myActive.qr_code} size={170} /></div>
                 <div className="text-center">
-                  <p className="font-display text-lg font-bold">{busNumber(myTrip.bus_id)} · {routeName(myTrip.route_id)}</p>
-                  <p className="text-sm text-muted-foreground">Show this QR to the marshal</p>
+                  <p className="font-display text-lg font-bold">{bus(myTrip.bus_id)?.bus_number} · {route(myTrip.route_id)?.name}</p>
+                  <p className="text-xs text-muted-foreground">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">Show this QR to the marshal at boarding.</p>
                 </div>
+                <Button variant="outline" size="sm" onClick={() => setTicketOpen(true)}>View full ticket</Button>
               </CardContent>
+            </Card>
+          ) : (
+            <Card className="shadow-soft">
+              <CardHeader><CardTitle>No active booking</CardTitle></CardHeader>
+              <CardContent><p className="text-sm text-muted-foreground">Pick a route on the left to book a seat. Your QR ticket appears here after a successful booking.</p></CardContent>
             </Card>
           )}
 
@@ -152,6 +218,76 @@ function StudentPage() {
           <ReportIssueCard />
         </div>
       </div>
+
+      {/* Confirm booking dialog */}
+      <Dialog open={!!confirmTrip} onOpenChange={(o) => !o && setConfirmTrip(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm your seat</DialogTitle>
+            <DialogDescription>Review the trip details before booking. A QR ticket is generated only after a successful booking.</DialogDescription>
+          </DialogHeader>
+          {confirmTrip && (() => {
+            const r = route(confirmTrip.route_id); const b = bus(confirmTrip.bus_id);
+            const remaining = Math.max(0, confirmTrip.capacity - confirmTrip.occupancy);
+            return (
+              <div className="space-y-2 rounded-xl border bg-muted/30 p-4 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Route</span><span className="font-semibold">{r?.name}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">From → To</span><span className="font-semibold">{r?.origin} → {r?.destination}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Bus</span><span className="font-mono font-semibold">{b?.bus_number}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">ETA</span><span className="font-semibold">{confirmTrip.eta_minutes} min{confirmTrip.delay_minutes > 0 ? ` (+${confirmTrip.delay_minutes}m delay)` : ""}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Seats left</span><span className="font-semibold">{remaining}/{confirmTrip.capacity}</span></div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmTrip(null)} disabled={submitting}>Cancel</Button>
+            <Button onClick={confirmBooking} disabled={submitting} className="bg-primary">
+              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Booking…</> : <><Ticket className="mr-2 h-4 w-4" />Confirm booking</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success modal */}
+      <Dialog open={!!justBooked} onOpenChange={(o) => !o && setBookingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="h-6 w-6 text-success" />Booking confirmed</DialogTitle>
+            <DialogDescription>Your seat is reserved. Show this QR code to the marshal to board.</DialogDescription>
+          </DialogHeader>
+          {justBooked && justBookedTrip && (
+            <div className="grid place-items-center gap-3">
+              <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={justBooked.qr_code} size={180} /></div>
+              <div className="w-full space-y-1 rounded-xl border bg-muted/30 p-4 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Route</span><span className="font-semibold">{route(justBookedTrip.route_id)?.name}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Bus</span><span className="font-mono font-semibold">{bus(justBookedTrip.bus_id)?.bus_number}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">ETA</span><span className="font-semibold">{justBookedTrip.eta_minutes}m</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Ticket ID</span><span className="font-mono text-xs">{justBooked.qr_code.slice(0, 12)}…</span></div>
+              </div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={() => setBookingId(null)} className="bg-primary w-full">Done</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Full ticket view */}
+      <Dialog open={ticketOpen} onOpenChange={setTicketOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Your ticket</DialogTitle></DialogHeader>
+          {myActive && myTrip && (
+            <div className="grid place-items-center gap-3">
+              <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={myActive.qr_code} size={220} /></div>
+              <div className="w-full space-y-1 rounded-xl border bg-muted/30 p-4 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Route</span><span className="font-semibold">{route(myTrip.route_id)?.name}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">From → To</span><span className="font-semibold">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Bus</span><span className="font-mono font-semibold">{bus(myTrip.bus_id)?.bus_number}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">ETA</span><span className="font-semibold">{myTrip.eta_minutes}m</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Booked</span><span className="font-semibold">{new Date(myActive.created_at).toLocaleString()}</span></div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }
