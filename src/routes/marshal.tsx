@@ -24,7 +24,9 @@ function MarshalPage() {
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [scan, setScan] = useState("");
   const [recent, setRecent] = useState<Booking[]>([]);
+  const [cameraOn, setCameraOn] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastScanRef = useRef<{ code: string; at: number }>({ code: "", at: 0 });
 
   useEffect(() => {
     const load = async () => {
