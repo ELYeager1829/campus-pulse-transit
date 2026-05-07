@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, ScanLine, Users, AlertTriangle } from "lucide-react";
+import { CheckCircle2, ScanLine, Users, AlertTriangle, Camera, CameraOff } from "lucide-react";
 import { toast } from "sonner";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 export const Route = createFileRoute("/marshal")({ component: MarshalPage });
 
