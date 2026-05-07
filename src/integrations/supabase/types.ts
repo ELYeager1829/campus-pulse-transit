@@ -14,16 +14,357 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          created_at: string
+          id: string
+          qr_code: string
+          status: string
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          qr_code?: string
+          status?: string
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          qr_code?: string
+          status?: string
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buses: {
+        Row: {
+          bus_number: string
+          capacity: number
+          current_lat: number | null
+          current_lng: number | null
+          driver_id: string | null
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bus_number: string
+          capacity?: number
+          current_lat?: number | null
+          current_lng?: number | null
+          driver_id?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bus_number?: string
+          capacity?: number
+          current_lat?: number | null
+          current_lng?: number | null
+          driver_id?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      issues: {
+        Row: {
+          bus_id: string | null
+          created_at: string
+          description: string
+          id: string
+          kind: string
+          reporter_id: string
+          severity: string
+          status: string
+          trip_id: string | null
+        }
+        Insert: {
+          bus_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          kind?: string
+          reporter_id: string
+          severity?: string
+          status?: string
+          trip_id?: string | null
+        }
+        Update: {
+          bus_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          kind?: string
+          reporter_id?: string
+          severity?: string
+          status?: string
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issues_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          matric_no: string | null
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          id: string
+          matric_no?: string | null
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          matric_no?: string | null
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      routes: {
+        Row: {
+          created_at: string
+          destination: string
+          estimated_duration_min: number
+          id: string
+          name: string
+          origin: string
+          stops: Json
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          estimated_duration_min?: number
+          id?: string
+          name: string
+          origin: string
+          stops?: Json
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          estimated_duration_min?: number
+          id?: string
+          name?: string
+          origin?: string
+          stops?: Json
+        }
+        Relationships: []
+      }
+      trips: {
+        Row: {
+          bus_id: string
+          capacity: number
+          created_at: string
+          delay_minutes: number
+          driver_id: string | null
+          ended_at: string | null
+          eta_minutes: number
+          id: string
+          marshal_id: string | null
+          occupancy: number
+          parent_trip_id: string | null
+          route_id: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          bus_id: string
+          capacity?: number
+          created_at?: string
+          delay_minutes?: number
+          driver_id?: string | null
+          ended_at?: string | null
+          eta_minutes?: number
+          id?: string
+          marshal_id?: string | null
+          occupancy?: number
+          parent_trip_id?: string | null
+          route_id: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          bus_id?: string
+          capacity?: number
+          created_at?: string
+          delay_minutes?: number
+          driver_id?: string | null
+          ended_at?: string | null
+          eta_minutes?: number
+          id?: string
+          marshal_id?: string | null
+          occupancy?: number
+          parent_trip_id?: string | null
+          route_id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_parent_trip_id_fkey"
+            columns: ["parent_trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      waiting_queue: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          status: string
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          status?: string
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          status?: string
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiting_queue_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "student" | "admin" | "driver" | "marshal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +491,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["student", "admin", "driver", "marshal"],
+    },
   },
 } as const
