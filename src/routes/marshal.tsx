@@ -85,9 +85,39 @@ function MarshalPage() {
         <Card className="lg:col-span-1 border-accent/40 shadow-glow">
           <CardHeader><CardTitle className="flex items-center gap-2"><ScanLine className="h-5 w-5 text-accent"/>QR validator</CardTitle></CardHeader>
           <CardContent>
-            <p className="mb-3 text-sm text-muted-foreground">Paste or type QR code. (Hardware scanners send keystrokes.)</p>
+            <div className="mb-3 overflow-hidden rounded-lg border bg-black/5 aspect-square relative">
+              {cameraOn ? (
+                <Scanner
+                  onScan={(results) => {
+                    const code = results?.[0]?.rawValue;
+                    if (!code) return;
+                    const now = Date.now();
+                    if (code === lastScanRef.current.code && now - lastScanRef.current.at < 2500) return;
+                    lastScanRef.current = { code, at: now };
+                    validate(code);
+                  }}
+                  onError={(err) => console.warn("scanner", err)}
+                  constraints={{ facingMode: "environment" }}
+                  styles={{ container: { width: "100%", height: "100%" }, video: { width: "100%", height: "100%", objectFit: "cover" } }}
+                  scanDelay={300}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-center text-sm text-muted-foreground p-4">
+                  <span>Camera is off. Tap “Start camera” to scan QR codes with your phone.</span>
+                </div>
+              )}
+            </div>
+            <Button
+              type="button"
+              onClick={() => setCameraOn((v) => !v)}
+              variant={cameraOn ? "outline" : "default"}
+              className="w-full mb-3"
+            >
+              {cameraOn ? <><CameraOff className="mr-2 h-4 w-4"/>Stop camera</> : <><Camera className="mr-2 h-4 w-4"/>Start camera</>}
+            </Button>
+            <p className="mb-2 text-xs text-muted-foreground">Or enter code manually:</p>
             <form onSubmit={(e)=>{e.preventDefault();validate(scan);}} className="flex gap-2">
-              <Input ref={inputRef} autoFocus value={scan} onChange={(e)=>setScan(e.target.value)} placeholder="QR code…" />
+              <Input ref={inputRef} value={scan} onChange={(e)=>setScan(e.target.value)} placeholder="QR code…" />
               <Button type="submit" className="bg-amber-gradient text-accent-foreground"><CheckCircle2 className="mr-1 h-4 w-4"/>Validate</Button>
             </form>
             <div className="mt-4 space-y-2">
