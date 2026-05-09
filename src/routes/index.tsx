@@ -123,12 +123,69 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="border-t bg-secondary/40 py-8">
-        <div className="mx-auto max-w-7xl px-6 text-sm text-muted-foreground">
-          © {new Date().getFullYear()} CampusBus · Smart Campus Bus Management System
-        </div>
-      </footer>
+      <ContactSection />
+
+      <SiteFooter />
     </div>
+  );
+}
+
+function ContactSection() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || message.trim().length < 5) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    setSending(true);
+    setTimeout(() => {
+      setSending(false);
+      setName(""); setEmail(""); setMessage("");
+      toast.success("Thanks! We'll get back to you shortly.");
+    }, 600);
+  }
+
+  return (
+    <section id="contact" className="border-t bg-secondary/40">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-2">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wider text-accent">Contact us</p>
+          <h2 className="mt-2 font-display text-4xl font-bold">We'd love to hear from you</h2>
+          <p className="mt-3 max-w-md text-muted-foreground">
+            Questions, feedback or campus partnerships — drop us a message and our team will reply within one business day.
+          </p>
+          <ul className="mt-6 space-y-3 text-sm">
+            <li className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-gradient text-accent-foreground"><Mail className="h-4 w-4"/></span>support@buslink.app</li>
+            <li className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-gradient text-accent-foreground"><Phone className="h-4 w-4"/></span>+27 11 555 0199</li>
+            <li className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-gradient text-accent-foreground"><MapPin className="h-4 w-4"/></span>Campus Transport Office, Main Gate</li>
+          </ul>
+        </div>
+        <form onSubmit={submit} className="rounded-2xl border bg-card p-6 shadow-soft">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input value={name} onChange={e=>setName(e.target.value)} placeholder="Jane Doe" />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@campus.edu" />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Message</label>
+              <Textarea rows={5} value={message} onChange={e=>setMessage(e.target.value)} placeholder="How can we help?" />
+            </div>
+            <Button type="submit" disabled={sending} className="bg-primary">
+              <Send className="mr-2 h-4 w-4"/>{sending ? "Sending…" : "Send message"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 }
 
