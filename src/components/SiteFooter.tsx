@@ -21,10 +21,10 @@ export function SiteFooter() {
         <div>
           <h4 className="font-display text-sm font-semibold uppercase tracking-wider text-accent">Roles</h4>
           <ul className="mt-3 space-y-2 text-sm">
-            <li><Link to="/student" className="hover:text-accent">Student</Link></li>
-            <li><Link to="/driver" className="hover:text-accent">Driver</Link></li>
-            <li><Link to="/marshal" className="hover:text-accent">Marshal</Link></li>
-            <li><Link to="/admin" className="hover:text-accent">Admin</Link></li>
+            <li><Link to="/auth" className="hover:text-accent">Student</Link></li>
+            <li><Link to="/auth" className="hover:text-accent">Driver</Link></li>
+            <li><Link to="/auth" className="hover:text-accent">Marshal</Link></li>
+            <li><Link to="/auth" className="hover:text-accent">Admin</Link></li>
           </ul>
         </div>
 
