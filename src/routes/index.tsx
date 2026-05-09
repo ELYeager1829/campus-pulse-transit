@@ -39,6 +39,7 @@ function Landing() {
             <span className="font-display text-lg font-bold tracking-tight">Campus<span className="text-accent">Bus</span></span>
           </div>
           <div className="flex items-center gap-2">
+            <a href="#contact" className="hidden md:inline-flex"><Button variant="ghost" className="text-primary-foreground hover:bg-white/10 hover:text-primary-foreground">Contact</Button></a>
             <Link to="/auth"><Button variant="ghost" className="text-primary-foreground hover:bg-white/10 hover:text-primary-foreground">Sign in</Button></Link>
             <Link to="/auth"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">Get started</Button></Link>
           </div>
