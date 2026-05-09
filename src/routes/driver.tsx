@@ -122,24 +122,45 @@ function DriverPage() {
         <Card className="shadow-soft">
           <CardHeader><CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-primary"/>Available trips</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {trips.filter(t=>t.status!=="completed").length === 0 && (
+            {trips.length === 0 && (
               <p className="text-sm text-muted-foreground">No trips available.</p>
             )}
-            {trips.filter(t=>t.status!=="completed").map(t=>(
-              <div key={t.id} className="flex items-center justify-between rounded-xl border p-4">
-                <div>
-                  <div className="flex items-center gap-2"><span className="font-display font-bold">{busNumber(t.bus_id)}</span><Badge>{t.status}</Badge></div>
-                  <p className="text-sm text-muted-foreground">{routeName(t.route_id)}</p>
-                </div>
-                {t.driver_id === user?.id && t.status==="active"
-                  ? <Button disabled variant="outline" className="border-success/50 text-success"><MapPin className="mr-2 h-4 w-4"/>Trip started</Button>
-                  : <Button onClick={()=>startTrip(t)} disabled={!!myActive || startingId===t.id} className="bg-primary">
+            {trips.map(t => {
+              const mine = t.driver_id === user?.id;
+              const isActive = t.status === "active";
+              const isCompleted = t.status === "completed";
+              return (
+                <div key={t.id} className="flex items-center justify-between rounded-xl border p-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-display font-bold">{busNumber(t.bus_id)}</span>
+                      <Badge variant={isActive ? "default" : isCompleted ? "secondary" : "outline"} className="capitalize">{t.status}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{routeName(t.route_id)}</p>
+                  </div>
+                  {isCompleted ? (
+                    <Button disabled variant="outline" className="border-muted-foreground/30 text-muted-foreground">
+                      <Square className="mr-2 h-4 w-4"/>Completed
+                    </Button>
+                  ) : mine && isActive ? (
+                    <div className="flex gap-2">
+                      <Button disabled variant="outline" className="border-success/50 text-success">
+                        <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-success"/>In progress
+                      </Button>
+                      <Button onClick={()=>endTrip(t)} variant="destructive" size="sm">
+                        <Square className="mr-2 h-4 w-4"/>End
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button onClick={()=>startTrip(t)} disabled={!!myActive || startingId===t.id} className="bg-primary">
                       {startingId===t.id
                         ? <><span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"/>Starting…</>
                         : <><Play className="mr-2 h-4 w-4"/>Start trip</>}
-                    </Button>}
-              </div>
-            ))}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 
