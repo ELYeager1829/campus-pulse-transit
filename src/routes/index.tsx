@@ -1,8 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bus, MapPin, QrCode, Bell, ShieldCheck, Activity, ArrowRight } from "lucide-react";
+import { Bus, MapPin, QrCode, Bell, ShieldCheck, Activity, ArrowRight, Mail, Phone, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth, dashboardPath } from "@/lib/auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { SiteFooter } from "@/components/SiteFooter";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
