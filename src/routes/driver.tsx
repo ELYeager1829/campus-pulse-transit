@@ -29,6 +29,7 @@ function DriverPage() {
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [tracking, setTracking] = useState<number | null>(null);
+  const [startingId, setStartingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
