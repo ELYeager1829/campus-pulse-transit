@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, dashboardPath, type AppRole } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { SiteFooter } from "@/components/SiteFooter";
 
 interface NavItem { to: string; label: string }
 const navByRole: Record<AppRole, NavItem[]> = {
