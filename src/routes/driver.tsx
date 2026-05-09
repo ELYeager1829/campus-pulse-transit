@@ -214,8 +214,22 @@ function ReportIssue({ buses, defaultBusId, tripId }: { buses: BusRow[]; default
       severity,
       description: desc.trim(),
     });
+    if (error) { setSubmitting(false); toast.error(error.message); return; }
+
+    // Notify all admins so they get an instant bell alert
+    const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+    if (admins?.length) {
+      await supabase.from("notifications").insert(
+        admins.map(a => ({
+          user_id: a.user_id,
+          kind: "issue",
+          title: `New ${severity} ${kind} report`,
+          body: desc.trim().slice(0, 200),
+        }))
+      );
+    }
+
     setSubmitting(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("Report sent to admin");
     setOpen(false);
     setDesc("");
