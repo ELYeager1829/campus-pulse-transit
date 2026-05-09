@@ -59,10 +59,13 @@ function DriverPage() {
 
   async function startTrip(t: Trip) {
     if (!user) return;
-    await supabase.from("trips").update({ driver_id: user.id, status: "active", started_at: new Date().toISOString() }).eq("id", t.id);
+    setStartingId(t.id);
+    const { error } = await supabase.from("trips").update({ driver_id: user.id, status: "active", started_at: new Date().toISOString() }).eq("id", t.id);
+    if (error) { setStartingId(null); toast.error(error.message); return; }
     await supabase.from("buses").update({ driver_id: user.id, status: "active" }).eq("id", t.bus_id);
     toast.success("Trip started");
     startGps(t);
+    setStartingId(null);
   }
 
   async function endTrip(t: Trip) {
