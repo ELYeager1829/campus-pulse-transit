@@ -95,12 +95,12 @@ function AdminPage() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 overflow-hidden shadow-soft">
+        <Card id="map" className="lg:col-span-2 overflow-hidden shadow-soft scroll-mt-20">
           <CardHeader><CardTitle>Live fleet map</CardTitle></CardHeader>
           <CardContent className="p-0"><LiveMap buses={activeBuses} height={420} /></CardContent>
         </Card>
 
-        <Card className="shadow-soft">
+        <Card id="issues" className="shadow-soft scroll-mt-20">
           <CardHeader><CardTitle>Issues</CardTitle></CardHeader>
           <CardContent className="space-y-2 max-h-[420px] overflow-auto">
             {issues.length===0 && <p className="text-sm text-muted-foreground">All clear.</p>}
