@@ -96,11 +96,13 @@ function DriverPage() {
           <h1 className="font-display text-3xl font-bold">Driver</h1>
           <p className="text-muted-foreground">Manage your trips, share live location, and report issues.</p>
         </div>
+        <div id="report" className="scroll-mt-20">
         <ReportIssue
           buses={candidateBuses}
           defaultBusId={myActive?.bus_id ?? candidateBuses[0]?.id ?? null}
           tripId={myActive?.id ?? null}
         />
+        </div>
       </div>
 
       {myActive && (
