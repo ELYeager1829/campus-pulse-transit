@@ -9,8 +9,8 @@ const GOOGLE_MAPS_API_KEY =
 
 export function LiveMap({
   buses,
-  center = { lat: 6.5244, lng: 3.3792 },
-  height = 360,
+  center = { lat: -25.7327, lng: 28.1631 }, // TUT Pretoria Main Campus
+  height,
 }: {
   buses: BusMarker[];
   center?: { lat: number; lng: number } | [number, number];
