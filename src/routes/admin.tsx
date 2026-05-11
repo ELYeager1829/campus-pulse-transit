@@ -87,7 +87,7 @@ function AdminPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div id="overview" className="grid gap-4 md:grid-cols-4 scroll-mt-20">
         <Stat icon={<Bus />} label="Buses" value={buses.length} />
         <Stat icon={<Activity />} label="Active trips" value={trips.filter(t=>t.status==="active"||t.status==="full").length} accent />
         <Stat icon={<Users />} label="Riders onboard" value={`${totalOccupancy}/${totalCapacity || "-"}`} />
