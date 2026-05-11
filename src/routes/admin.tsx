@@ -115,7 +115,7 @@ function AdminPage() {
       </div>
 
       {fullTrips.length > 0 && (
-        <Card className="mt-6 border-warning/50 shadow-soft">
+        <Card id="full-buses" className="mt-6 border-warning/50 shadow-soft scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2 text-warning"><AlertTriangle className="h-5 w-5" />Full buses — deploy second?</CardTitle></CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             {fullTrips.map(t=>(
