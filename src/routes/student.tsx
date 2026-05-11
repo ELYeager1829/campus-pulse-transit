@@ -304,6 +304,22 @@ function StudentPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Cancel booking confirmation */}
+      <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><XCircle className="h-5 w-5 text-destructive"/>Cancel booking?</DialogTitle>
+            <DialogDescription>Your seat will be released back to other students. This cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelOpen(false)} disabled={cancelling}>Keep booking</Button>
+            <Button variant="destructive" onClick={cancelBooking} disabled={cancelling}>
+              {cancelling ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Cancelling…</> : <><XCircle className="mr-2 h-4 w-4"/>Cancel booking</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }
