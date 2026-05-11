@@ -104,7 +104,7 @@ function DriverPage() {
       </div>
 
       {myActive && (
-        <Card className="mb-6 border-success/50 shadow-soft">
+        <Card id="active-trip" className="mb-6 border-success/50 shadow-soft scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2 text-success"><MapPin className="h-5 w-5" />On a trip · {busNumber(myActive.bus_id)}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{routeName(myActive.route_id)}</p>
