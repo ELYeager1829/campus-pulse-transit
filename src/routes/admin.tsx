@@ -128,7 +128,7 @@ function AdminPage() {
         </Card>
       )}
 
-      <Card className="mt-6 shadow-soft">
+      <Card id="trips" className="mt-6 shadow-soft scroll-mt-20">
         <CardHeader><CardTitle>All trips</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {trips.length===0 && <p className="text-sm text-muted-foreground">No trips.</p>}
