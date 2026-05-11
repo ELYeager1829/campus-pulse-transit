@@ -334,7 +334,7 @@ function ReportIssueCard() {
     if (error) toast.error(error.message); else { toast.success("Issue reported"); setOpen(false); setDesc(""); }
   }
   return (
-    <Card className="shadow-soft">
+    <Card id="report" className="shadow-soft scroll-mt-20">
       <CardHeader><CardTitle>Need help?</CardTitle></CardHeader>
       <CardContent>
         <Dialog open={open} onOpenChange={setOpen}>
