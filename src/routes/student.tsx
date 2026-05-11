@@ -33,6 +33,17 @@ function StudentPage() {
   const [bookingId, setBookingId] = useState<string | null>(null); // id of just-booked record (for success modal)
   const [ticketOpen, setTicketOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  async function cancelBooking() {
+    if (!user || !myActive) return;
+    setCancelling(true);
+    const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", myActive.id);
+    setCancelling(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Booking cancelled"); setCancelOpen(false); }
+  }
 
   useEffect(() => {
     const load = async () => {
