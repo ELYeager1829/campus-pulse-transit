@@ -164,7 +164,7 @@ function DriverPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-soft">
+        <Card id="reports" className="shadow-soft scroll-mt-20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FileWarning className="h-5 w-5 text-accent"/>My issue reports</CardTitle>
           </CardHeader>
