@@ -1,5 +1,5 @@
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from "@vis.gl/react-google-maps";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface BusMarker { id: string; bus_number: string; lat: number; lng: number }
 
@@ -17,8 +17,20 @@ export function LiveMap({
   height?: number;
 }) {
   const [active, setActive] = useState<string | null>(null);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const c = Array.isArray(center) ? { lat: center[0], lng: center[1] } : center;
-  const focus = buses[0] ? { lat: buses[0].lat, lng: buses[0].lng } : c;
+
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (err) => console.warn("geolocation", err),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, []);
+
+  const focus = userLoc ?? (buses[0] ? { lat: buses[0].lat, lng: buses[0].lng } : c);
 
   return (
     <div style={{ height, width: "100%", borderRadius: 16, overflow: "hidden", background: "#eef" }}>
@@ -31,6 +43,11 @@ export function LiveMap({
           disableDefaultUI={false}
           style={{ width: "100%", height: "100%" }}
         >
+          {userLoc && (
+            <AdvancedMarker position={userLoc} title="You are here">
+              <Pin background="#3b82f6" borderColor="#1e3a8a" glyphColor="#fff" />
+            </AdvancedMarker>
+          )}
           {buses.map((b) => (
             <AdvancedMarker
               key={b.id}

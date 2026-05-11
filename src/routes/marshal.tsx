@@ -48,6 +48,16 @@ function MarshalPage() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
+  // Auto-close the camera when any active trip reaches full capacity
+  useEffect(() => {
+    if (!cameraOn) return;
+    const anyFull = trips.some(t => t.occupancy >= t.capacity);
+    if (anyFull) {
+      setCameraOn(false);
+      toast.info("Bus full — scanner closed");
+    }
+  }, [trips, cameraOn]);
+
   const busNumber = (id: string) => buses.find(b=>b.id===id)?.bus_number ?? "—";
   const routeName = (id: string) => routes.find(r=>r.id===id)?.name ?? "Route";
 
