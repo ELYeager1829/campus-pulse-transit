@@ -108,12 +108,12 @@ function StudentPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="overflow-hidden shadow-soft">
+          <Card id="map" className="overflow-hidden shadow-soft scroll-mt-20">
             <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
             <CardContent className="p-0"><LiveMap buses={activeBuses} /></CardContent>
           </Card>
 
-          <Card className="shadow-soft">
+          <Card id="routes" className="shadow-soft scroll-mt-20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-accent" />Available routes</CardTitle>
               {myActive && <p className="text-xs text-muted-foreground">You already have an active booking — view your ticket on the right.</p>}
