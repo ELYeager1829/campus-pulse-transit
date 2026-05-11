@@ -9,7 +9,7 @@ const GOOGLE_MAPS_API_KEY =
 
 export function LiveMap({
   buses,
-  center = { lat: -25.7327, lng: 28.1631 }, // TUT Pretoria Main Campus
+  center = { lat: -25.5350, lng: 28.1018 }, // TUT Soshanguve South Campus
   height,
 }: {
   buses: BusMarker[];
