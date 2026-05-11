@@ -9,8 +9,8 @@ const GOOGLE_MAPS_API_KEY =
 
 export function LiveMap({
   buses,
-  center = { lat: 6.5244, lng: 3.3792 },
-  height = 360,
+  center = { lat: -25.7327, lng: 28.1631 }, // TUT Pretoria Main Campus
+  height,
 }: {
   buses: BusMarker[];
   center?: { lat: number; lng: number } | [number, number];
@@ -33,7 +33,10 @@ export function LiveMap({
   const focus = userLoc ?? (buses[0] ? { lat: buses[0].lat, lng: buses[0].lng } : c);
 
   return (
-    <div style={{ height, width: "100%", borderRadius: 16, overflow: "hidden", background: "#eef" }}>
+    <div
+      className="w-full overflow-hidden rounded-2xl bg-secondary"
+      style={{ height: height ?? "clamp(220px, 45vh, 480px)" }}
+    >
       <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
         <Map
           mapId="campusbus-live"
