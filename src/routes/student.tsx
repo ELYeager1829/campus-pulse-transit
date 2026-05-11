@@ -178,7 +178,7 @@ function StudentPage() {
 
         <div className="space-y-6">
           {myActive && myTrip ? (
-            <Card className="overflow-hidden border-accent/40 shadow-glow">
+            <Card id="ticket" className="overflow-hidden border-accent/40 shadow-glow scroll-mt-20">
               <CardHeader className="bg-amber-gradient text-accent-foreground">
                 <CardTitle className="flex items-center justify-between">
                   <span>Your boarding pass</span>
@@ -192,17 +192,22 @@ function StudentPage() {
                   <p className="text-xs text-muted-foreground">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</p>
                   <p className="mt-2 text-xs text-muted-foreground">Show this QR to the marshal at boarding.</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setTicketOpen(true)}>View full ticket</Button>
+                <div className="flex w-full gap-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setTicketOpen(true)}>View full ticket</Button>
+                  <Button variant="destructive" size="sm" className="flex-1" onClick={() => setCancelOpen(true)} disabled={cancelling}>
+                    {cancelling ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Cancelling…</> : <><XCircle className="mr-2 h-4 w-4"/>Cancel booking</>}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (
-            <Card className="shadow-soft">
+            <Card id="ticket" className="shadow-soft scroll-mt-20">
               <CardHeader><CardTitle>No active booking</CardTitle></CardHeader>
               <CardContent><p className="text-sm text-muted-foreground">Pick a route on the left to book a seat. Your QR ticket appears here after a successful booking.</p></CardContent>
             </Card>
           )}
 
-          <Card className="shadow-soft">
+          <Card id="notifications" className="shadow-soft scroll-mt-20">
             <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-accent" />Notifications</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {notifs.length === 0 && <p className="text-sm text-muted-foreground">No notifications yet.</p>}
