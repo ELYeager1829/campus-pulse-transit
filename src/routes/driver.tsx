@@ -119,7 +119,7 @@ function DriverPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="shadow-soft">
+        <Card id="trips" className="shadow-soft scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-primary"/>Available trips</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {trips.length === 0 && (
