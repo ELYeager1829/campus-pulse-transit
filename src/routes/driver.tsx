@@ -96,15 +96,17 @@ function DriverPage() {
           <h1 className="font-display text-3xl font-bold">Driver</h1>
           <p className="text-muted-foreground">Manage your trips, share live location, and report issues.</p>
         </div>
+        <div id="report" className="scroll-mt-20">
         <ReportIssue
           buses={candidateBuses}
           defaultBusId={myActive?.bus_id ?? candidateBuses[0]?.id ?? null}
           tripId={myActive?.id ?? null}
         />
+        </div>
       </div>
 
       {myActive && (
-        <Card className="mb-6 border-success/50 shadow-soft">
+        <Card id="active-trip" className="mb-6 border-success/50 shadow-soft scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2 text-success"><MapPin className="h-5 w-5" />On a trip · {busNumber(myActive.bus_id)}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{routeName(myActive.route_id)}</p>
@@ -119,7 +121,7 @@ function DriverPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="shadow-soft">
+        <Card id="trips" className="shadow-soft scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-primary"/>Available trips</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {trips.length === 0 && (
@@ -164,7 +166,7 @@ function DriverPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-soft">
+        <Card id="reports" className="shadow-soft scroll-mt-20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FileWarning className="h-5 w-5 text-accent"/>My issue reports</CardTitle>
           </CardHeader>

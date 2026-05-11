@@ -87,7 +87,7 @@ function AdminPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div id="overview" className="grid gap-4 md:grid-cols-4 scroll-mt-20">
         <Stat icon={<Bus />} label="Buses" value={buses.length} />
         <Stat icon={<Activity />} label="Active trips" value={trips.filter(t=>t.status==="active"||t.status==="full").length} accent />
         <Stat icon={<Users />} label="Riders onboard" value={`${totalOccupancy}/${totalCapacity || "-"}`} />
@@ -95,12 +95,12 @@ function AdminPage() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 overflow-hidden shadow-soft">
+        <Card id="map" className="lg:col-span-2 overflow-hidden shadow-soft scroll-mt-20">
           <CardHeader><CardTitle>Live fleet map</CardTitle></CardHeader>
           <CardContent className="p-0"><LiveMap buses={activeBuses} height={420} /></CardContent>
         </Card>
 
-        <Card className="shadow-soft">
+        <Card id="issues" className="shadow-soft scroll-mt-20">
           <CardHeader><CardTitle>Issues</CardTitle></CardHeader>
           <CardContent className="space-y-2 max-h-[420px] overflow-auto">
             {issues.length===0 && <p className="text-sm text-muted-foreground">All clear.</p>}
@@ -115,7 +115,7 @@ function AdminPage() {
       </div>
 
       {fullTrips.length > 0 && (
-        <Card className="mt-6 border-warning/50 shadow-soft">
+        <Card id="full-buses" className="mt-6 border-warning/50 shadow-soft scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2 text-warning"><AlertTriangle className="h-5 w-5" />Full buses — deploy second?</CardTitle></CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             {fullTrips.map(t=>(
@@ -128,7 +128,7 @@ function AdminPage() {
         </Card>
       )}
 
-      <Card className="mt-6 shadow-soft">
+      <Card id="trips" className="mt-6 shadow-soft scroll-mt-20">
         <CardHeader><CardTitle>All trips</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {trips.length===0 && <p className="text-sm text-muted-foreground">No trips.</p>}

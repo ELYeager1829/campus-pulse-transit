@@ -82,7 +82,7 @@ function MarshalPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1 border-accent/40 shadow-glow">
+        <Card id="scanner" className="lg:col-span-1 border-accent/40 shadow-glow scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2"><ScanLine className="h-5 w-5 text-accent"/>QR validator</CardTitle></CardHeader>
           <CardContent>
             <div className="mb-3 overflow-hidden rounded-lg border bg-black/5 aspect-square relative">
@@ -130,7 +130,7 @@ function MarshalPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 shadow-soft">
+        <Card id="incoming" className="lg:col-span-2 shadow-soft scroll-mt-20">
           <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-accent"/>Incoming buses</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {trips.length===0 && <p className="text-sm text-muted-foreground">No active trips.</p>}
