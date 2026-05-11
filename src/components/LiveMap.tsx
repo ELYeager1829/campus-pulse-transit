@@ -33,7 +33,10 @@ export function LiveMap({
   const focus = userLoc ?? (buses[0] ? { lat: buses[0].lat, lng: buses[0].lng } : c);
 
   return (
-    <div style={{ height, width: "100%", borderRadius: 16, overflow: "hidden", background: "#eef" }}>
+    <div
+      className="w-full overflow-hidden rounded-2xl bg-secondary"
+      style={{ height: height ?? "clamp(220px, 45vh, 480px)" }}
+    >
       <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
         <Map
           mapId="campusbus-live"
