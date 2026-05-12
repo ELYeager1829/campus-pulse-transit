@@ -186,9 +186,6 @@ function AdminPage() {
           })}
         </CardContent>
       </Card>
-    </DashboardShell>
-  );
-}
 
       <MaintenanceSection
         buses={buses}
