@@ -35,14 +35,13 @@ function StudentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const alertedRef = useRef<Record<string, Set<number>>>({});
 
   // Request student geolocation for ETA accuracy
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
     const id = navigator.geolocation.watchPosition(
-      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => console.debug("[student-geo]", pos.coords.latitude, pos.coords.longitude),
       (err) => console.warn("geo", err),
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
     );
