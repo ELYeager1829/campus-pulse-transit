@@ -51,9 +51,9 @@ function StudentPage() {
 
   // Traffic delay alerts at 15/10/5 min thresholds for the user's active trip
   useEffect(() => {
-    const myTripId = myActive?.trip_id;
-    if (!myTripId) return;
-    const trip = trips.find(t => t.id === myTripId);
+    const active = bookings.find(b => b.status === "booked");
+    if (!active) return;
+    const trip = trips.find(t => t.id === active.trip_id);
     if (!trip || trip.delay_minutes <= 0) return;
     const eta = trip.eta_minutes;
     const thresholds = [15, 10, 5];
@@ -67,7 +67,7 @@ function StudentPage() {
         });
       }
     }
-  }, [trips]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [trips, bookings]);
 
   async function cancelBooking() {
     if (!user || !myActive) return;
