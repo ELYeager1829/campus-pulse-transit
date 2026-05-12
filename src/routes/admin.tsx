@@ -20,14 +20,19 @@ export const Route = createFileRoute("/admin")({ component: AdminPage });
 
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; eta_minutes: number; delay_minutes: number; }
 interface BusRow { id: string; bus_number: string; capacity: number; status: string; current_lat: number | null; current_lng: number | null; }
-interface RouteRow { id: string; name: string; }
-interface Issue { id: string; description: string; severity: string; status: string; kind: string; created_at: string; }
+interface RouteRow { id: string; name: string; origin: string; destination: string; estimated_duration_min: number; times?: string[] | null; }
+interface Issue { id: string; description: string; severity: string; status: string; kind: string; created_at: string; bus_id?: string | null; trip_id?: string | null; reporter_id?: string; }
+interface ProfileLite { id: string; full_name: string; matric_no?: string | null; }
+interface RoleRow { user_id: string; role: string; }
 
 function AdminPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [buses, setBuses] = useState<BusRow[]>([]);
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [profiles, setProfiles] = useState<ProfileLite[]>([]);
+  const [roleRows, setRoleRows] = useState<RoleRow[]>([]);
+  const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
 
   useEffect(() => {
     const load = async () => {
