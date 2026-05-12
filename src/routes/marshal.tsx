@@ -171,6 +171,60 @@ function MarshalPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card id="checkins" className="mt-6 shadow-soft scroll-mt-20 animate-fade-in">
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-success"/>Latest check-ins</CardTitle>
+          <div className="w-48">
+            <Select value={filterBus} onValueChange={setFilterBus}>
+              <SelectTrigger><SelectValue placeholder="Filter by bus"/></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All buses</SelectItem>
+                {buses.map(b => <SelectItem key={b.id} value={b.id}>Bus {b.bus_number}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {checkins.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No check-ins yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>QR</TableHead>
+                  <TableHead>Bus</TableHead>
+                  <TableHead>Route</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Boarded</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {checkins
+                  .filter(c => {
+                    if (filterBus === "all") return true;
+                    const trip = trips.find(t => t.id === c.trip_id);
+                    return trip?.bus_id === filterBus;
+                  })
+                  .map(c => {
+                    const trip = trips.find(t => t.id === c.trip_id);
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-mono text-xs">{c.qr_code.slice(0,12)}…</TableCell>
+                        <TableCell>{trip ? busNumber(trip.bus_id) : "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{trip ? routeName(trip.route_id) : "—"}</TableCell>
+                        <TableCell><Badge variant="secondary" className="capitalize">{c.status}</Badge></TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true }) : "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </DashboardShell>
   );
 }
