@@ -18,7 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 export const Route = createFileRoute("/driver")({ component: DriverPage });
 
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; driver_id: string | null; }
-interface BusRow { id: string; bus_number: string; driver_id: string | null; }
+interface BusRow { id: string; bus_number: string; driver_id: string | null; current_lat?: number | null; current_lng?: number | null; }
 interface RouteRow { id: string; name: string; }
 interface Issue { id: string; bus_id: string | null; trip_id: string | null; kind: string; severity: string; description: string; status: string; created_at: string; }
 
