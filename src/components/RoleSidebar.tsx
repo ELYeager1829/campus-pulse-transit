@@ -35,6 +35,7 @@ const navByRole: Record<AppRole, Item[]> = {
   marshal: [
     { id: "scanner", label: "QR scanner", icon: ScanLine },
     { id: "incoming", label: "Incoming buses", icon: Users },
+    { id: "checkins", label: "Latest check-ins", icon: CheckCircle2 },
   ],
   admin: [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -42,6 +43,7 @@ const navByRole: Record<AppRole, Item[]> = {
     { id: "issues", label: "Issues", icon: AlertTriangle },
     { id: "full-buses", label: "Full buses", icon: Clock },
     { id: "trips", label: "All trips", icon: Bus },
+    { id: "manage", label: "Maintenance", icon: Wrench },
   ],
 };
 
