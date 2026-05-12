@@ -190,6 +190,179 @@ function AdminPage() {
   );
 }
 
+      <MaintenanceSection
+        buses={buses}
+        routes={routes}
+        profiles={profiles}
+        roleRows={roleRows}
+      />
+
+      {/* Issue detail / handling dialog */}
+      <Dialog open={!!activeIssue} onOpenChange={(o)=>!o && setActiveIssue(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-accent"/>Issue details
+            </DialogTitle>
+            <DialogDescription>Review and update this report.</DialogDescription>
+          </DialogHeader>
+          {activeIssue && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={activeIssue.severity==="high"?"destructive":activeIssue.severity==="low"?"secondary":"default"}>{activeIssue.severity}</Badge>
+                <Badge variant="outline" className="capitalize">{activeIssue.kind}</Badge>
+                <Badge variant={activeIssue.status==="open"?"destructive":activeIssue.status==="resolved"?"secondary":"outline"} className="capitalize">{activeIssue.status}</Badge>
+                <span className="ml-auto text-xs text-muted-foreground">{formatDistanceToNow(new Date(activeIssue.created_at), { addSuffix: true })}</span>
+              </div>
+              {activeIssue.bus_id && <p className="text-xs text-muted-foreground">Bus: <span className="font-mono">{busNumber(activeIssue.bus_id)}</span></p>}
+              <div className="rounded-lg border bg-muted/30 p-3 text-sm whitespace-pre-wrap">{activeIssue.description}</div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            {activeIssue?.status !== "in_progress" && (
+              <Button variant="outline" onClick={()=>activeIssue && updateIssueStatus(activeIssue.id, "in_progress")}>
+                <Wrench className="mr-2 h-4 w-4"/>Mark in progress
+              </Button>
+            )}
+            {activeIssue?.status !== "resolved" && (
+              <Button onClick={()=>activeIssue && updateIssueStatus(activeIssue.id, "resolved")} className="bg-primary">
+                <CheckCircle2 className="mr-2 h-4 w-4"/>Resolve
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </DashboardShell>
+  );
+}
+
+function MaintenanceSection({ buses, routes, profiles, roleRows }: {
+  buses: BusRow[]; routes: RouteRow[]; profiles: ProfileLite[]; roleRows: RoleRow[];
+}) {
+  const [busNum, setBusNum] = useState(""); const [busCap, setBusCap] = useState("40");
+  const [rName, setRName] = useState(""); const [rOrigin, setROrigin] = useState(""); const [rDest, setRDest] = useState("");
+
+  async function addBus() {
+    if (!busNum.trim()) return toast.error("Bus number required");
+    const { error } = await supabase.from("buses").insert({ bus_number: busNum.trim(), capacity: Number(busCap) || 40 });
+    if (error) toast.error(error.message); else { toast.success("Bus added"); setBusNum(""); }
+  }
+  async function deleteBus(id: string) {
+    const { error } = await supabase.from("buses").delete().eq("id", id);
+    if (error) toast.error(error.message); else toast.success("Bus removed");
+  }
+  async function addRoute() {
+    if (!rName.trim() || !rOrigin.trim() || !rDest.trim()) return toast.error("All route fields required");
+    const { error } = await supabase.from("routes").insert({ name: rName.trim(), origin: rOrigin.trim(), destination: rDest.trim(), stops: [] });
+    if (error) toast.error(error.message); else { toast.success("Route added"); setRName(""); setROrigin(""); setRDest(""); }
+  }
+  async function deleteRoute(id: string) {
+    const { error } = await supabase.from("routes").delete().eq("id", id);
+    if (error) toast.error(error.message); else toast.success("Route removed");
+  }
+  async function changeRole(userId: string, role: "student"|"driver"|"marshal"|"admin") {
+    await supabase.from("user_roles").delete().eq("user_id", userId);
+    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
+    if (error) toast.error(error.message); else toast.success(`Role updated to ${role}`);
+  }
+
+  const roleOf = (uid: string) => roleRows.find(r => r.user_id === uid)?.role ?? "student";
+
+  return (
+    <Card id="manage" className="mt-6 shadow-soft scroll-mt-20 animate-fade-in">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5 text-accent"/>Maintenance</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-8">
+        {/* Buses */}
+        <section>
+          <h3 className="font-display font-bold mb-3 flex items-center gap-2"><Bus className="h-4 w-4"/>Buses ({buses.length})</h3>
+          <div className="flex flex-wrap gap-2 mb-3">
+            <Input placeholder="Bus number" value={busNum} onChange={e=>setBusNum(e.target.value)} className="w-40"/>
+            <Input type="number" placeholder="Capacity" value={busCap} onChange={e=>setBusCap(e.target.value)} className="w-28"/>
+            <Button onClick={addBus} className="bg-primary"><Plus className="mr-1 h-4 w-4"/>Add bus</Button>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow><TableHead>Number</TableHead><TableHead>Capacity</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {buses.map(b=>(
+                  <TableRow key={b.id}>
+                    <TableCell className="font-mono">{b.bus_number}</TableCell>
+                    <TableCell>{b.capacity}</TableCell>
+                    <TableCell><Badge variant="secondary" className="capitalize">{b.status}</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" onClick={()=>deleteBus(b.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+
+        {/* Routes */}
+        <section>
+          <h3 className="font-display font-bold mb-3 flex items-center gap-2"><FileText className="h-4 w-4"/>Routes ({routes.length})</h3>
+          <div className="flex flex-wrap gap-2 mb-3">
+            <Input placeholder="Name" value={rName} onChange={e=>setRName(e.target.value)} className="w-48"/>
+            <Input placeholder="Origin" value={rOrigin} onChange={e=>setROrigin(e.target.value)} className="w-40"/>
+            <Input placeholder="Destination" value={rDest} onChange={e=>setRDest(e.target.value)} className="w-40"/>
+            <Button onClick={addRoute} className="bg-primary"><Plus className="mr-1 h-4 w-4"/>Add route</Button>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>From → To</TableHead><TableHead>Times</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {routes.map(r=>(
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{r.origin} → {r.destination}</TableCell>
+                    <TableCell className="text-xs font-mono">{(r.times ?? []).join(", ") || "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" onClick={()=>deleteRoute(r.id)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+
+        {/* People */}
+        <section>
+          <h3 className="font-display font-bold mb-3 flex items-center gap-2"><Users className="h-4 w-4"/>People ({profiles.length})</h3>
+          <p className="text-xs text-muted-foreground mb-3">Assign roles for marshals, drivers, students. New accounts must sign up via the auth page.</p>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Matric #</TableHead><TableHead>Role</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {profiles.map(p=>(
+                  <TableRow key={p.id}>
+                    <TableCell>{p.full_name || "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">{p.matric_no || "—"}</TableCell>
+                    <TableCell>
+                      <Select value={roleOf(p.id)} onValueChange={(v)=>changeRole(p.id, v as "student"|"driver"|"marshal"|"admin")}>
+                        <SelectTrigger className="w-36"><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="student">Student</SelectItem>
+                          <SelectItem value="driver">Driver</SelectItem>
+                          <SelectItem value="marshal">Marshal</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+      </CardContent>
+    </Card>
+  );
+}
+
 function Stat({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number | string; accent?: boolean }) {
   return (
     <Card className={`shadow-soft ${accent ? "border-accent/50" : ""}`}>
