@@ -105,20 +105,30 @@ function DriverPage() {
         </div>
       </div>
 
-      {myActive && (
-        <Card id="active-trip" className="mb-6 border-success/50 shadow-soft scroll-mt-20">
+      {myActive && (() => {
+        const myBus = buses.find(b => b.id === myActive.bus_id);
+        return (
+        <Card id="active-trip" className="mb-6 border-success/50 shadow-soft scroll-mt-20 animate-fade-in">
           <CardHeader><CardTitle className="flex items-center gap-2 text-success"><MapPin className="h-5 w-5" />On a trip · {busNumber(myActive.bus_id)}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{routeName(myActive.route_id)}</p>
             <Progress value={Math.round((myActive.occupancy/myActive.capacity)*100)} className="mt-3" />
             <p className="mt-1 text-xs text-muted-foreground">{myActive.occupancy}/{myActive.capacity} riders · GPS {tracking!==null ? "live" : "off"}</p>
+            {(myBus?.current_lat && myBus?.current_lng) && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs font-mono">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-success"/>
+                <span className="text-muted-foreground">Lat</span> {myBus.current_lat.toFixed(5)}
+                <span className="text-muted-foreground ml-2">Lng</span> {myBus.current_lng.toFixed(5)}
+              </div>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
               {tracking===null ? <Button onClick={()=>startGps(myActive)} className="bg-primary"><MapPin className="mr-2 h-4 w-4"/>Share GPS</Button> : <Button onClick={stopGps} variant="outline">Pause GPS</Button>}
               <Button onClick={()=>endTrip(myActive)} variant="destructive"><Square className="mr-2 h-4 w-4"/>End trip</Button>
             </div>
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card id="trips" className="shadow-soft scroll-mt-20">
