@@ -35,16 +35,18 @@ function MarshalPage() {
 
   useEffect(() => {
     const load = async () => {
-      const [t, b, r, bk] = await Promise.all([
+      const [t, b, r, bk, ck] = await Promise.all([
         supabase.from("trips").select("*").in("status",["active","scheduled","full","delayed"]),
         supabase.from("buses").select("*"),
         supabase.from("routes").select("*"),
         supabase.from("bookings").select("*").eq("status","boarded").order("created_at",{ascending:false}).limit(8),
+        supabase.from("bookings").select("*").eq("status","boarded").order("created_at",{ascending:false}).limit(50),
       ]);
       setTrips((t.data ?? []) as Trip[]);
       setBuses((b.data ?? []) as BusRow[]);
       setRoutes((r.data ?? []) as RouteRow[]);
       setRecent((bk.data ?? []) as Booking[]);
+      setCheckins((ck.data ?? []) as Booking[]);
     };
     load();
     const ch = supabase.channel("marshal-live")
