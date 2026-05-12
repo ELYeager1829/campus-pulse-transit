@@ -46,6 +46,7 @@
 
 :root {
   --radius: 0.75rem;
+
   /* Navy + Amber clean university brand */
   --background: oklch(0.985 0.005 240);
   --foreground: oklch(0.20 0.04 250);
@@ -55,7 +56,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.20 0.04 250);
 
-  --primary: oklch(0.28 0.09 258);          /* deep navy */
+  --primary: oklch(0.28 0.09 258);
   --primary-foreground: oklch(0.98 0.01 240);
   --primary-glow: oklch(0.42 0.13 258);
 
@@ -65,7 +66,7 @@
   --muted: oklch(0.95 0.01 240);
   --muted-foreground: oklch(0.50 0.03 255);
 
-  --accent: oklch(0.78 0.16 70);            /* amber */
+  --accent: oklch(0.78 0.16 70);
   --accent-foreground: oklch(0.22 0.05 250);
   --accent-glow: oklch(0.85 0.18 80);
 
@@ -96,28 +97,153 @@
   --sidebar-accent-foreground: oklch(0.96 0.01 240);
   --sidebar-border: oklch(0.30 0.06 256);
   --sidebar-ring: oklch(0.78 0.16 70);
+
+  /* ── Fluid type scale ───────────────────────────────────────────────────
+     clamp(min, preferred, max)
+     preferred uses vi (viewport-inline) so it scales with container width.
+  ── */
+  --text-xs:   clamp(0.70rem,  1.8vi, 0.75rem);
+  --text-sm:   clamp(0.80rem,  2vi,   0.875rem);
+  --text-base: clamp(0.875rem, 2.2vi, 1rem);
+  --text-lg:   clamp(1rem,     2.6vi, 1.125rem);
+  --text-xl:   clamp(1.1rem,   3vi,   1.25rem);
+  --text-2xl:  clamp(1.2rem,   3.5vi, 1.5rem);
+  --text-3xl:  clamp(1.4rem,   4vi,   1.875rem);
+  --text-4xl:  clamp(1.6rem,   5vi,   2.25rem);
+  --text-5xl:  clamp(1.8rem,   6vi,   3rem);
+  --text-6xl:  clamp(2rem,     7vi,   3.75rem);
+
+  /* ── Fluid spacing scale ────────────────────────────────────────────── */
+  --space-1:  clamp(0.20rem, 0.5vi, 0.25rem);
+  --space-2:  clamp(0.40rem, 1vi,   0.50rem);
+  --space-3:  clamp(0.60rem, 1.5vi, 0.75rem);
+  --space-4:  clamp(0.80rem, 2vi,   1rem);
+  --space-5:  clamp(1rem,    2.5vi, 1.25rem);
+  --space-6:  clamp(1.2rem,  3vi,   1.5rem);
+  --space-8:  clamp(1.5rem,  4vi,   2rem);
+  --space-10: clamp(1.8rem,  5vi,   2.5rem);
+  --space-12: clamp(2rem,    6vi,   3rem);
+  --space-16: clamp(2.5rem,  8vi,   4rem);
+  --space-20: clamp(3rem,    10vi,  5rem);
+  --space-24: clamp(3.5rem,  12vi,  6rem);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
+
+  html {
+    scroll-behavior: smooth;
+    /* prevent horizontal overflow on small screens */
+    overflow-x: hidden;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    /* fluid horizontal padding so content never touches edges */
+    padding-inline: clamp(0.75rem, 4vi, 0rem); /* pages handle their own px-6 etc */
   }
-  h1, h2, h3, h4, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  /* Fluid heading sizes applied globally */
+  h1 { font-size: var(--text-5xl); }
+  h2 { font-size: var(--text-4xl); }
+  h3 { font-size: var(--text-2xl); }
+  h4 { font-size: var(--text-xl); }
+
+  /* Inputs & buttons never smaller than 44px tall on touch screens */
+  input, button, select, textarea {
+    min-height: 44px;
+    font-size: var(--text-base);
+  }
+
+  /* Images never overflow their container */
+  img, video, svg { max-width: 100%; height: auto; }
 }
 
 @layer utilities {
-  .bg-hero { background: var(--gradient-hero); }
+  .bg-hero           { background: var(--gradient-hero); }
   .bg-amber-gradient { background: var(--gradient-amber); }
-  .shadow-soft { box-shadow: var(--shadow-soft); }
-  .shadow-elevated { box-shadow: var(--shadow-elevated); }
-  .shadow-glow { box-shadow: var(--shadow-glow); }
-  .text-balance { text-wrap: balance; }
+  .shadow-soft       { box-shadow: var(--shadow-soft); }
+  .shadow-elevated   { box-shadow: var(--shadow-elevated); }
+  .shadow-glow       { box-shadow: var(--shadow-glow); }
+  .text-balance      { text-wrap: balance; }
+
+  /* Fluid text utilities — use these in components instead of text-4xl etc */
+  .text-fluid-xs   { font-size: var(--text-xs); }
+  .text-fluid-sm   { font-size: var(--text-sm); }
+  .text-fluid-base { font-size: var(--text-base); }
+  .text-fluid-lg   { font-size: var(--text-lg); }
+  .text-fluid-xl   { font-size: var(--text-xl); }
+  .text-fluid-2xl  { font-size: var(--text-2xl); }
+  .text-fluid-3xl  { font-size: var(--text-3xl); }
+  .text-fluid-4xl  { font-size: var(--text-4xl); }
+  .text-fluid-5xl  { font-size: var(--text-5xl); }
+  .text-fluid-6xl  { font-size: var(--text-6xl); }
+
+  /* Fluid spacing utilities */
+  .p-fluid-4  { padding: var(--space-4); }
+  .p-fluid-6  { padding: var(--space-6); }
+  .p-fluid-8  { padding: var(--space-8); }
+  .p-fluid-12 { padding: var(--space-12); }
+  .py-fluid-16 { padding-block: var(--space-16); }
+  .py-fluid-20 { padding-block: var(--space-20); }
+  .py-fluid-24 { padding-block: var(--space-24); }
+  .gap-fluid-4 { gap: var(--space-4); }
+  .gap-fluid-6 { gap: var(--space-6); }
+
+  /* Safe-area padding for notched phones */
+  .safe-top    { padding-top:    env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-x      { padding-inline: env(safe-area-inset-left) env(safe-area-inset-right); }
+
+  /* Touch-friendly tap targets */
+  .tap-target {
+    min-width:  44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Responsive container with fluid side padding */
+  .container-fluid {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 5vi, 1.5rem);
+  }
 }
 
-@layer base {
-  html { scroll-behavior: smooth; }
+/* ── Responsive overrides for auth split-panel ─────────────────────────────
+   On mobile the left hero panel is hidden (md:flex handles this already),
+   but we ensure the right form panel fills the screen cleanly.
+── */
+@media (max-width: 767px) {
+  /* Full-width form panel on mobile */
+  .auth-form-panel {
+    padding: var(--space-6);
+  }
+
+  /* Stack grid cols on small screens */
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Responsive overrides for landing hero ─────────────────────────────── */
+@media (max-width: 1023px) {
+  /* Hero text col fills full width below lg */
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
 }
