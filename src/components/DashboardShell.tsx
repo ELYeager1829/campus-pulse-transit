@@ -1,37 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bus, LogOut, Bell } from "lucide-react";
+import { Bus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, dashboardPath, type AppRole } from "@/lib/auth";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { RoleSidebar } from "@/components/RoleSidebar";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 export function DashboardShell({ children, requireRole }: { children: React.ReactNode; requireRole: AppRole }) {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     if (loading) return;
     if (!user) navigate({ to: "/auth" });
     else if (role && role !== requireRole) navigate({ to: dashboardPath(role) });
   }, [user, role, loading, navigate, requireRole]);
-
-  useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      const { count } = await supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("read", false);
-      setUnread(count ?? 0);
-    };
-    load();
-    const ch = supabase.channel("notif-bell").on("postgres_changes",
-      { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, load).subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [user]);
 
   async function signOut() {
     await supabase.auth.signOut();
