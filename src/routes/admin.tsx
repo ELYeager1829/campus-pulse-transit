@@ -36,16 +36,20 @@ function AdminPage() {
 
   useEffect(() => {
     const load = async () => {
-      const [t, b, r, i] = await Promise.all([
+      const [t, b, r, i, p, ur] = await Promise.all([
         supabase.from("trips").select("*").order("created_at",{ascending:false}),
         supabase.from("buses").select("*"),
         supabase.from("routes").select("*"),
-        supabase.from("issues").select("*").order("created_at",{ascending:false}).limit(10),
+        supabase.from("issues").select("*").order("created_at",{ascending:false}).limit(20),
+        supabase.from("profiles").select("id,full_name,matric_no"),
+        supabase.from("user_roles").select("user_id,role"),
       ]);
       setTrips((t.data ?? []) as Trip[]);
       setBuses((b.data ?? []) as BusRow[]);
       setRoutes((r.data ?? []) as RouteRow[]);
       setIssues((i.data ?? []) as Issue[]);
+      setProfiles((p.data ?? []) as ProfileLite[]);
+      setRoleRows((ur.data ?? []) as RoleRow[]);
     };
     load();
     const ch = supabase.channel("admin-live")
