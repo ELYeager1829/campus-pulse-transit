@@ -47,6 +47,7 @@ function DriverPage() {
     if (user) load();
     const ch = supabase.channel("driver-live")
       .on("postgres_changes",{event:"*",schema:"public",table:"trips"}, load)
+      .on("postgres_changes",{event:"*",schema:"public",table:"buses"}, load)
       .on("postgres_changes",{event:"*",schema:"public",table:"issues"}, load)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
