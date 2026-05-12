@@ -35,6 +35,39 @@ function StudentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const alertedRef = useRef<Record<string, Set<number>>>({});
+
+  // Request student geolocation for ETA accuracy
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (err) => console.warn("geo", err),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, []);
+
+  // Traffic delay alerts at 15/10/5 min thresholds for the user's active trip
+  useEffect(() => {
+    const myTripId = myActive?.trip_id;
+    if (!myTripId) return;
+    const trip = trips.find(t => t.id === myTripId);
+    if (!trip || trip.delay_minutes <= 0) return;
+    const eta = trip.eta_minutes;
+    const thresholds = [15, 10, 5];
+    if (!alertedRef.current[trip.id]) alertedRef.current[trip.id] = new Set();
+    for (const th of thresholds) {
+      if (eta <= th && !alertedRef.current[trip.id].has(th)) {
+        alertedRef.current[trip.id].add(th);
+        toast.warning(`Traffic delay alert · ${th} min ETA`, {
+          description: `Your bus is now ${eta} min away (+${trip.delay_minutes}m delay).`,
+          duration: 8000,
+        });
+      }
+    }
+  }, [trips]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function cancelBooking() {
     if (!user || !myActive) return;
