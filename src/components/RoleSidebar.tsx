@@ -13,7 +13,7 @@ import {
 import type { AppRole } from "@/lib/auth";
 import {
   Map, Ticket, Bell, AlertTriangle, Bus, Wrench, ScanLine, Users,
-  Activity, FileWarning, LayoutDashboard, Clock,
+  Activity, FileWarning, LayoutDashboard, Clock, CheckCircle2,
 } from "lucide-react";
 
 type Item = { id: string; label: string; icon: React.ComponentType<{ className?: string }> };
