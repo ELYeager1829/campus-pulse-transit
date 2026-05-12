@@ -128,10 +128,18 @@ function AdminPage() {
           <CardContent className="space-y-2 max-h-[420px] overflow-auto">
             {issues.length===0 && <p className="text-sm text-muted-foreground">All clear.</p>}
             {issues.map(i=>(
-              <div key={i.id} className="rounded-lg border p-3">
-                <div className="flex items-start justify-between"><Badge variant={i.status==="open"?"destructive":"secondary"}>{i.status}</Badge><span className="text-[10px] text-muted-foreground">{i.kind}</span></div>
-                <p className="mt-1 text-sm">{i.description}</p>
-              </div>
+              <button
+                key={i.id}
+                onClick={()=>setActiveIssue(i)}
+                className="w-full text-left rounded-lg border p-3 transition hover:bg-muted/50 hover:shadow-soft"
+              >
+                <div className="flex items-start justify-between">
+                  <Badge variant={i.status==="open"?"destructive":"secondary"}>{i.status}</Badge>
+                  <span className="text-[10px] text-muted-foreground">{i.kind}</span>
+                </div>
+                <p className="mt-1 text-sm line-clamp-2">{i.description}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(i.created_at), { addSuffix: true })}</p>
+              </button>
             ))}
           </CardContent>
         </Card>
