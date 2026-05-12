@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { LiveMap } from "@/components/LiveMap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
