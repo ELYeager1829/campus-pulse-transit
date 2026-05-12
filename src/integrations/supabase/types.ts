@@ -196,6 +196,7 @@ export type Database = {
           name: string
           origin: string
           stops: Json
+          times: string[]
         }
         Insert: {
           created_at?: string
@@ -205,6 +206,7 @@ export type Database = {
           name: string
           origin: string
           stops?: Json
+          times?: string[]
         }
         Update: {
           created_at?: string
@@ -214,6 +216,7 @@ export type Database = {
           name?: string
           origin?: string
           stops?: Json
+          times?: string[]
         }
         Relationships: []
       }
