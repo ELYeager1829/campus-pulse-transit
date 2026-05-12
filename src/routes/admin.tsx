@@ -55,9 +55,17 @@ function AdminPage() {
     const ch = supabase.channel("admin-live")
       .on("postgres_changes",{event:"*",schema:"public",table:"trips"},load)
       .on("postgres_changes",{event:"*",schema:"public",table:"buses"},load)
-      .on("postgres_changes",{event:"*",schema:"public",table:"issues"},load).subscribe();
+      .on("postgres_changes",{event:"*",schema:"public",table:"issues"},load)
+      .on("postgres_changes",{event:"*",schema:"public",table:"routes"},load)
+      .on("postgres_changes",{event:"*",schema:"public",table:"user_roles"},load).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  async function updateIssueStatus(id: string, status: string) {
+    const { error } = await supabase.from("issues").update({ status }).eq("id", id);
+    if (error) toast.error(error.message); else toast.success(`Issue marked ${status}`);
+    setActiveIssue(null);
+  }
 
   const busNumber = (id: string) => buses.find(b=>b.id===id)?.bus_number ?? "—";
   const routeName = (id: string) => routes.find(r=>r.id===id)?.name ?? "Route";
