@@ -27,6 +27,8 @@ function MarshalPage() {
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [scan, setScan] = useState("");
   const [recent, setRecent] = useState<Booking[]>([]);
+  const [checkins, setCheckins] = useState<Booking[]>([]);
+  const [filterBus, setFilterBus] = useState<string>("all");
   const [cameraOn, setCameraOn] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastScanRef = useRef<{ code: string; at: number }>({ code: "", at: 0 });
