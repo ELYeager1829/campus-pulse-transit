@@ -46,10 +46,7 @@ export function DashboardShell({ children, requireRole }: { children: React.Reac
                 </Link>
               </div>
               <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Button size="icon" variant="ghost"><Bell className="h-5 w-5" /></Button>
-                  {unread > 0 && <Badge className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full bg-accent px-1.5 text-[10px] text-accent-foreground">{unread}</Badge>}
-                </div>
+                {user && <NotificationsBell userId={user.id} />}
                 <Button onClick={signOut} variant="ghost" size="sm"><LogOut className="mr-2 h-4 w-4" />Sign out</Button>
               </div>
             </div>
