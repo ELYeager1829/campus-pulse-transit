@@ -19,7 +19,7 @@ export const Route = createFileRoute("/marshal")({ component: MarshalPage });
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; }
 interface BusRow { id: string; bus_number: string; }
 interface RouteRow { id: string; name: string; }
-interface Booking { id: string; qr_code: string; status: string; user_id: string; trip_id: string; }
+interface Booking { id: string; qr_code: string; status: string; user_id: string; trip_id: string; created_at?: string; }
 
 function MarshalPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
