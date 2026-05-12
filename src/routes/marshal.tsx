@@ -6,17 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, ScanLine, Users, AlertTriangle, Camera, CameraOff } from "lucide-react";
 import { toast } from "sonner";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/marshal")({ component: MarshalPage });
 
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; }
 interface BusRow { id: string; bus_number: string; }
 interface RouteRow { id: string; name: string; }
-interface Booking { id: string; qr_code: string; status: string; user_id: string; trip_id: string; }
+interface Booking { id: string; qr_code: string; status: string; user_id: string; trip_id: string; created_at?: string; }
 
 function MarshalPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -24,22 +27,26 @@ function MarshalPage() {
   const [routes, setRoutes] = useState<RouteRow[]>([]);
   const [scan, setScan] = useState("");
   const [recent, setRecent] = useState<Booking[]>([]);
+  const [checkins, setCheckins] = useState<Booking[]>([]);
+  const [filterBus, setFilterBus] = useState<string>("all");
   const [cameraOn, setCameraOn] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastScanRef = useRef<{ code: string; at: number }>({ code: "", at: 0 });
 
   useEffect(() => {
     const load = async () => {
-      const [t, b, r, bk] = await Promise.all([
+      const [t, b, r, bk, ck] = await Promise.all([
         supabase.from("trips").select("*").in("status",["active","scheduled","full","delayed"]),
         supabase.from("buses").select("*"),
         supabase.from("routes").select("*"),
         supabase.from("bookings").select("*").eq("status","boarded").order("created_at",{ascending:false}).limit(8),
+        supabase.from("bookings").select("*").eq("status","boarded").order("created_at",{ascending:false}).limit(50),
       ]);
       setTrips((t.data ?? []) as Trip[]);
       setBuses((b.data ?? []) as BusRow[]);
       setRoutes((r.data ?? []) as RouteRow[]);
       setRecent((bk.data ?? []) as Booking[]);
+      setCheckins((ck.data ?? []) as Booking[]);
     };
     load();
     const ch = supabase.channel("marshal-live")
@@ -164,6 +171,60 @@ function MarshalPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card id="checkins" className="mt-6 shadow-soft scroll-mt-20 animate-fade-in">
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-success"/>Latest check-ins</CardTitle>
+          <div className="w-48">
+            <Select value={filterBus} onValueChange={setFilterBus}>
+              <SelectTrigger><SelectValue placeholder="Filter by bus"/></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All buses</SelectItem>
+                {buses.map(b => <SelectItem key={b.id} value={b.id}>Bus {b.bus_number}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {checkins.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No check-ins yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>QR</TableHead>
+                  <TableHead>Bus</TableHead>
+                  <TableHead>Route</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Boarded</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {checkins
+                  .filter(c => {
+                    if (filterBus === "all") return true;
+                    const trip = trips.find(t => t.id === c.trip_id);
+                    return trip?.bus_id === filterBus;
+                  })
+                  .map(c => {
+                    const trip = trips.find(t => t.id === c.trip_id);
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-mono text-xs">{c.qr_code.slice(0,12)}…</TableCell>
+                        <TableCell>{trip ? busNumber(trip.bus_id) : "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{trip ? routeName(trip.route_id) : "—"}</TableCell>
+                        <TableCell><Badge variant="secondary" className="capitalize">{c.status}</Badge></TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true }) : "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </DashboardShell>
   );
 }

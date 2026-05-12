@@ -13,7 +13,7 @@ import {
 import type { AppRole } from "@/lib/auth";
 import {
   Map, Ticket, Bell, AlertTriangle, Bus, Wrench, ScanLine, Users,
-  Activity, FileWarning, LayoutDashboard, Clock,
+  Activity, FileWarning, LayoutDashboard, Clock, CheckCircle2,
 } from "lucide-react";
 
 type Item = { id: string; label: string; icon: React.ComponentType<{ className?: string }> };
@@ -35,6 +35,7 @@ const navByRole: Record<AppRole, Item[]> = {
   marshal: [
     { id: "scanner", label: "QR scanner", icon: ScanLine },
     { id: "incoming", label: "Incoming buses", icon: Users },
+    { id: "checkins", label: "Latest check-ins", icon: CheckCircle2 },
   ],
   admin: [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -42,6 +43,7 @@ const navByRole: Record<AppRole, Item[]> = {
     { id: "issues", label: "Issues", icon: AlertTriangle },
     { id: "full-buses", label: "Full buses", icon: Clock },
     { id: "trips", label: "All trips", icon: Bus },
+    { id: "manage", label: "Maintenance", icon: Wrench },
   ],
 };
 
