@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeCanvas } from "qrcode.react";
-import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass, XCircle } from "lucide-react";
+import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass, XCircle, MapPinOff, Navigation } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
+import { useGeolocation, haversineKm } from "@/hooks/use-geolocation";
+import { Reveal } from "@/components/Reveal";
 
 export const Route = createFileRoute("/student")({ component: StudentPage });
 
