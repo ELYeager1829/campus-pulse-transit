@@ -167,13 +167,43 @@ function StudentPage() {
         <p className="text-muted-foreground">Browse routes, book your seat, board with QR.</p>
       </div>
 
+      {(geo.status === "denied" || geo.status === "unsupported" || geo.status === "error") && (
+        <Reveal className="mb-6">
+          <div className="flex flex-wrap items-start gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">
+            <MapPinOff className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Location access is off</p>
+              <p className="mt-0.5 text-muted-foreground">
+                {geo.status === "unsupported"
+                  ? "This browser doesn't support GPS — distance and proximity alerts are unavailable."
+                  : "Enable GPS so we can show your live distance to the bus and proximity alerts."}
+                {geo.coords && (
+                  <> Showing your <span className="font-medium text-foreground">last known location</span> from {new Date(geo.coords.ts).toLocaleTimeString()}.</>
+                )}
+              </p>
+              {myTrip && (
+                <p className="mt-1 text-xs text-muted-foreground">Last reported ETA: <span className="font-semibold text-foreground">{myTrip.eta_minutes} min</span>{myTrip.delay_minutes>0 && ` (+${myTrip.delay_minutes}m delay)`}</p>
+              )}
+            </div>
+            {geo.status !== "unsupported" && (
+              <Button size="sm" onClick={geo.retry} className="bg-warning text-warning-foreground hover:bg-warning/90">
+                <Navigation className="mr-2 h-4 w-4"/>Enable GPS
+              </Button>
+            )}
+          </div>
+        </Reveal>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
+          <Reveal>
           <Card id="map" className="overflow-hidden shadow-soft scroll-mt-20">
             <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
-            <CardContent className="p-0"><LiveMap buses={activeBuses} trackBusId={myTrip?.status === "active" ? myTrip.bus_id : null} /></CardContent>
+            <CardContent className="p-0"><LiveMap buses={activeBuses} trackBusId={myTrip?.status === "active" ? myTrip.bus_id : null} userLoc={geo.coords ? { lat: geo.coords.lat, lng: geo.coords.lng } : null} /></CardContent>
           </Card>
+          </Reveal>
 
+          <Reveal delay={0.05}>
           <Card id="routes" className="shadow-soft scroll-mt-20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-accent" />Available routes</CardTitle>
