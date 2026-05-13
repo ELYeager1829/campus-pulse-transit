@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow, useMap } from "@vis.gl/react-google-maps";
 import { useEffect, useState } from "react";
 
