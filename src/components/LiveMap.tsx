@@ -44,26 +44,30 @@ export function LiveMap({
   center = { lat: -25.5350, lng: 28.1018 },
   height,
   trackBusId,
+  userLoc: externalUserLoc,
 }: {
   buses: BusMarker[];
   center?: { lat: number; lng: number } | [number, number];
   height?: number;
   trackBusId?: string | null;
+  userLoc?: { lat: number; lng: number } | null;
 }) {
   const [active, setActive] = useState<string | null>(null);
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [internalUserLoc, setInternalUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const c = Array.isArray(center) ? { lat: center[0], lng: center[1] } : center;
 
   useEffect(() => {
+    if (externalUserLoc !== undefined) return; // parent controls location
     if (!("geolocation" in navigator)) return;
     const id = navigator.geolocation.watchPosition(
-      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => setInternalUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => console.warn("geolocation", err),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
     return () => navigator.geolocation.clearWatch(id);
-  }, []);
+  }, [externalUserLoc]);
 
+  const userLoc = externalUserLoc !== undefined ? externalUserLoc : internalUserLoc;
   const trackedBus = trackBusId ? buses.find(b => b.id === trackBusId) : null;
   const focus = userLoc ?? (buses[0] ? { lat: buses[0].lat, lng: buses[0].lng } : c);
   const distanceKm = userLoc && trackedBus ? haversineKm(userLoc, { lat: trackedBus.lat, lng: trackedBus.lng }) : null;
