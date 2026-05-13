@@ -125,12 +125,23 @@ function DriverPage() {
       {myActive && (() => {
         const myBus = buses.find(b => b.id === myActive.bus_id);
         return (
-        <Card id="active-trip" className="mb-6 border-success/50 shadow-soft scroll-mt-20 animate-fade-in">
-          <CardHeader><CardTitle className="flex items-center gap-2 text-success"><MapPin className="h-5 w-5" />On a trip · {busNumber(myActive.bus_id)}</CardTitle></CardHeader>
+        <Card id="active-trip" className="mb-6 border-success/50 shadow-glow scroll-mt-20 animate-fade-in ring-2 ring-success/30">
+          <CardHeader className="bg-success/5">
+            <CardTitle className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 text-success">
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75"/>
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-success"/>
+                </span>
+                Live Operations · Bus {busNumber(myActive.bus_id)}
+              </span>
+              <Badge variant="outline" className="border-success/50 text-success capitalize">{myActive.status}</Badge>
+            </CardTitle>
+          </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{routeName(myActive.route_id)}</p>
             <Progress value={Math.round((myActive.occupancy/myActive.capacity)*100)} className="mt-3" />
-            <p className="mt-1 text-xs text-muted-foreground">{myActive.occupancy}/{myActive.capacity} riders · GPS {tracking!==null ? "live" : "off"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{myActive.occupancy}/{myActive.capacity} riders · GPS broadcast {tracking!==null ? "live to students" : "paused"}</p>
             {(myBus?.current_lat && myBus?.current_lng) && (
               <div className="mt-3 flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs font-mono">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-success"/>
@@ -139,8 +150,11 @@ function DriverPage() {
               </div>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
-              {tracking===null ? <Button onClick={()=>startGps(myActive)} className="bg-primary"><MapPin className="mr-2 h-4 w-4"/>Share GPS</Button> : <Button onClick={stopGps} variant="outline">Pause GPS</Button>}
-              <Button onClick={()=>endTrip(myActive)} variant="destructive"><Square className="mr-2 h-4 w-4"/>End trip</Button>
+              {tracking===null
+                ? <Button onClick={()=>startGps(myActive)} className="bg-primary"><MapPin className="mr-2 h-4 w-4"/>Share GPS</Button>
+                : <Button onClick={stopGps} variant="outline">Pause GPS</Button>}
+              <Button onClick={()=>endTrip(myActive)} variant="default" className="bg-success text-success-foreground hover:bg-success/90"><Square className="mr-2 h-4 w-4"/>End trip</Button>
+              <Button onClick={()=>cancelTrip(myActive)} variant="destructive"><AlertTriangle className="mr-2 h-4 w-4"/>Cancel trip</Button>
             </div>
           </CardContent>
         </Card>
