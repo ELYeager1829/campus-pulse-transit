@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeCanvas } from "qrcode.react";
-import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass, XCircle } from "lucide-react";
+import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass, XCircle, MapPinOff, Navigation } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
+import { useGeolocation, haversineKm } from "@/hooks/use-geolocation";
+import { Reveal } from "@/components/Reveal";
 
 export const Route = createFileRoute("/student")({ component: StudentPage });
 
@@ -37,16 +39,8 @@ function StudentPage() {
   const [cancelling, setCancelling] = useState(false);
   const alertedRef = useRef<Record<string, Set<number>>>({});
 
-  // Request student geolocation for ETA accuracy
-  useEffect(() => {
-    if (!("geolocation" in navigator)) return;
-    const id = navigator.geolocation.watchPosition(
-      (pos) => console.debug("[student-geo]", pos.coords.latitude, pos.coords.longitude),
-      (err) => console.warn("geo", err),
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
-    );
-    return () => navigator.geolocation.clearWatch(id);
-  }, []);
+  const geo = useGeolocation();
+  const distAlertedRef = useRef<Set<string>>(new Set());
 
   // Traffic delay alerts at 15/10/5 min thresholds for the user's active trip
   useEffect(() => {
@@ -112,6 +106,30 @@ function StudentPage() {
   const myTrip = myActive ? trips.find(t => t.id === myActive.trip_id) : undefined;
   const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
   const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
+  const myBus = myTrip ? buses.find(b => b.id === myTrip.bus_id) : undefined;
+  const liveDistanceKm = (geo.coords && myBus?.current_lat && myBus?.current_lng && myTrip?.status === "active")
+    ? haversineKm(geo.coords, { lat: myBus.current_lat, lng: myBus.current_lng })
+    : null;
+
+  // Distance-based proximity alerts
+  useEffect(() => {
+    if (!myTrip || myTrip.status !== "active") return;
+    const key = myTrip.id;
+    if (liveDistanceKm !== null) {
+      if (liveDistanceKm <= 0.5 && !distAlertedRef.current.has(key + ":500m")) {
+        distAlertedRef.current.add(key + ":500m");
+        toast.success("Bus within 500m", { description: "Head to your stop now.", duration: 9000 });
+      }
+      if (liveDistanceKm <= 1 && !distAlertedRef.current.has(key + ":1km")) {
+        distAlertedRef.current.add(key + ":1km");
+        toast("Bus within 1km", { description: "Get ready to board." });
+      }
+    }
+    if (myTrip.eta_minutes <= 5 && !distAlertedRef.current.has(key + ":5min")) {
+      distAlertedRef.current.add(key + ":5min");
+      toast("Arriving in ~5 minutes", { description: "Make your way to the pickup point." });
+    }
+  }, [liveDistanceKm, myTrip]);
 
   async function confirmBooking() {
     if (!user || !confirmTrip) return;
@@ -149,13 +167,43 @@ function StudentPage() {
         <p className="text-muted-foreground">Browse routes, book your seat, board with QR.</p>
       </div>
 
+      {(geo.status === "denied" || geo.status === "unsupported" || geo.status === "error") && (
+        <Reveal className="mb-6">
+          <div className="flex flex-wrap items-start gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">
+            <MapPinOff className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Location access is off</p>
+              <p className="mt-0.5 text-muted-foreground">
+                {geo.status === "unsupported"
+                  ? "This browser doesn't support GPS — distance and proximity alerts are unavailable."
+                  : "Enable GPS so we can show your live distance to the bus and proximity alerts."}
+                {geo.coords && (
+                  <> Showing your <span className="font-medium text-foreground">last known location</span> from {new Date(geo.coords.ts).toLocaleTimeString()}.</>
+                )}
+              </p>
+              {myTrip && (
+                <p className="mt-1 text-xs text-muted-foreground">Last reported ETA: <span className="font-semibold text-foreground">{myTrip.eta_minutes} min</span>{myTrip.delay_minutes>0 && ` (+${myTrip.delay_minutes}m delay)`}</p>
+              )}
+            </div>
+            {geo.status !== "unsupported" && (
+              <Button size="sm" onClick={geo.retry} className="bg-warning text-warning-foreground hover:bg-warning/90">
+                <Navigation className="mr-2 h-4 w-4"/>Enable GPS
+              </Button>
+            )}
+          </div>
+        </Reveal>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
+          <Reveal>
           <Card id="map" className="overflow-hidden shadow-soft scroll-mt-20">
             <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
-            <CardContent className="p-0"><LiveMap buses={activeBuses} trackBusId={myTrip?.status === "active" ? myTrip.bus_id : null} /></CardContent>
+            <CardContent className="p-0"><LiveMap buses={activeBuses} trackBusId={myTrip?.status === "active" ? myTrip.bus_id : null} userLoc={geo.coords ? { lat: geo.coords.lat, lng: geo.coords.lng } : null} /></CardContent>
           </Card>
+          </Reveal>
 
+          <Reveal delay={0.05}>
           <Card id="routes" className="shadow-soft scroll-mt-20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Bus className="h-5 w-5 text-accent" />Available routes</CardTitle>
@@ -217,9 +265,11 @@ function StudentPage() {
               })}
             </CardContent>
           </Card>
+          </Reveal>
         </div>
 
         <div className="space-y-6">
+          <Reveal delay={0.1}>
           {myActive && myTrip ? (
             <Card id="ticket" className="overflow-hidden border-accent/40 shadow-glow scroll-mt-20">
               <CardHeader className="bg-amber-gradient text-accent-foreground">
@@ -233,6 +283,12 @@ function StudentPage() {
                 <div className="text-center">
                   <p className="font-display text-lg font-bold">{bus(myTrip.bus_id)?.bus_number} · {route(myTrip.route_id)?.name}</p>
                   <p className="text-xs text-muted-foreground">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</p>
+                  {liveDistanceKm !== null && (
+                    <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success"/>
+                      {liveDistanceKm < 1 ? `${Math.round(liveDistanceKm * 1000)} m away` : `${liveDistanceKm.toFixed(2)} km away`}
+                    </p>
+                  )}
                   <p className="mt-2 text-xs text-muted-foreground">Show this QR to the marshal at boarding.</p>
                 </div>
                 <div className="flex w-full gap-2">
@@ -249,7 +305,9 @@ function StudentPage() {
               <CardContent><p className="text-sm text-muted-foreground">Pick a route on the left to book a seat. Your QR ticket appears here after a successful booking.</p></CardContent>
             </Card>
           )}
+          </Reveal>
 
+          <Reveal delay={0.15}>
           <Card id="notifications" className="shadow-soft scroll-mt-20">
             <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-accent" />Notifications</CardTitle></CardHeader>
             <CardContent className="space-y-2">
@@ -262,8 +320,9 @@ function StudentPage() {
               ))}
             </CardContent>
           </Card>
+          </Reveal>
 
-          <ReportIssueCard />
+          <Reveal delay={0.2}><ReportIssueCard /></Reveal>
         </div>
       </div>
 
