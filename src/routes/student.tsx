@@ -39,16 +39,8 @@ function StudentPage() {
   const [cancelling, setCancelling] = useState(false);
   const alertedRef = useRef<Record<string, Set<number>>>({});
 
-  // Request student geolocation for ETA accuracy
-  useEffect(() => {
-    if (!("geolocation" in navigator)) return;
-    const id = navigator.geolocation.watchPosition(
-      (pos) => console.debug("[student-geo]", pos.coords.latitude, pos.coords.longitude),
-      (err) => console.warn("geo", err),
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
-    );
-    return () => navigator.geolocation.clearWatch(id);
-  }, []);
+  const geo = useGeolocation();
+  const distAlertedRef = useRef<Set<string>>(new Set());
 
   // Traffic delay alerts at 15/10/5 min thresholds for the user's active trip
   useEffect(() => {
