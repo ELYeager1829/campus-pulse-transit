@@ -8,10 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeCanvas } from "qrcode.react";
-import {
-  Bus, MapPin, Bell, Ticket, CheckCircle2, Loader2,
-  XCircle, Clock, ArrowRight, AlertTriangle, Users, Hourglass, CalendarClock,
-} from "lucide-react";
+import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -19,6 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
+import { useGeolocation, haversineKm } from "@/hooks/use-geolocation";
+import { Reveal } from "@/components/Reveal";
 
 export const Route = createFileRoute("/student")({ component: StudentPage });
 
@@ -114,20 +113,18 @@ function StudentPage() {
   const [now, setNow] = useState(new Date());
   const alertedRef = useRef<Record<string, Set<number>>>({});
 
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 60000); return () => clearInterval(t); }, []);
+  // Request student geolocation for ETA accuracy
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => console.debug("[student-geo]", pos.coords.latitude, pos.coords.longitude),
+      (err) => console.warn("geo", err),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, []);
 
-  const getRoute = (id: string) => routes.find(r => r.id === id);
-  const getBus = (id: string) => buses.find(b => b.id === id);
-  const activeBuses = buses.filter(b => b.current_lat && b.current_lng).map(b => ({ id: b.id, bus_number: b.bus_number, lat: b.current_lat!, lng: b.current_lng! }));
-  const myActiveBooking = useMemo(() => bookings.find(b => b.status === "booked"), [bookings]);
-  const myActiveTrip = myActiveBooking ? trips.find(t => t.id === myActiveBooking.trip_id) : undefined;
-  const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
-  const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
-
-  const allSlots = useMemo(() => buildSlots(now), [now]);
-  const groupedSlots = useMemo(() => groupBy(allSlots, s => s.routeName), [allSlots]);
-
-  // Delay alerts
+  // Traffic delay alerts at 15/10/5 min thresholds for the user's active trip
   useEffect(() => {
     if (!myActiveBooking) return;
     const trip = trips.find(t => t.id === myActiveBooking.trip_id);
@@ -170,7 +167,14 @@ function StudentPage() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
-  // Book live trip
+  const route = (id: string) => routes.find(r => r.id === id);
+  const bus = (id: string) => buses.find(b => b.id === id);
+  const activeBuses = buses.filter(b => b.current_lat && b.current_lng).map(b => ({ id: b.id, bus_number: b.bus_number, lat: b.current_lat!, lng: b.current_lng! }));
+  const myActive = useMemo(() => bookings.find(b => b.status === "booked"), [bookings]);
+  const myTrip = myActive ? trips.find(t => t.id === myActive.trip_id) : undefined;
+  const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
+  const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
+
   async function confirmBooking() {
     if (!user || !confirmTrip) return;
     setSubmitting(true);
@@ -254,20 +258,43 @@ function StudentPage() {
         <p className="text-muted-foreground">Browse routes, book your seat, board with QR.</p>
       </div>
 
+      {(geo.status === "denied" || geo.status === "unsupported" || geo.status === "error") && (
+        <Reveal className="mb-6">
+          <div className="flex flex-wrap items-start gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">
+            <MapPinOff className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Location access is off</p>
+              <p className="mt-0.5 text-muted-foreground">
+                {geo.status === "unsupported"
+                  ? "This browser doesn't support GPS — distance and proximity alerts are unavailable."
+                  : "Enable GPS so we can show your live distance to the bus and proximity alerts."}
+                {geo.coords && (
+                  <> Showing your <span className="font-medium text-foreground">last known location</span> from {new Date(geo.coords.ts).toLocaleTimeString()}.</>
+                )}
+              </p>
+              {myTrip && (
+                <p className="mt-1 text-xs text-muted-foreground">Last reported ETA: <span className="font-semibold text-foreground">{myTrip.eta_minutes} min</span>{myTrip.delay_minutes>0 && ` (+${myTrip.delay_minutes}m delay)`}</p>
+              )}
+            </div>
+            {geo.status !== "unsupported" && (
+              <Button size="sm" onClick={geo.retry} className="bg-warning text-warning-foreground hover:bg-warning/90">
+                <Navigation className="mr-2 h-4 w-4"/>Enable GPS
+              </Button>
+            )}
+          </div>
+        </Reveal>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
 
         {/* LEFT */}
         <div className="lg:col-span-2 space-y-6">
-
           <Card id="map" className="overflow-hidden shadow-soft scroll-mt-20">
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle>
-              <Badge variant="secondary">{activeBuses.length} buses live</Badge>
-            </CardHeader>
+            <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
             <CardContent className="p-0"><LiveMap buses={activeBuses} /></CardContent>
           </Card>
+          </Reveal>
 
-          {/* All routes from routes.json */}
           <Card id="routes" className="shadow-soft scroll-mt-20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -341,66 +368,11 @@ function StudentPage() {
               })}
             </CardContent>
           </Card>
-
-          {/* Live trips from Supabase */}
-          {trips.length > 0 && (
-            <Card id="live-trips" className="shadow-soft scroll-mt-20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bus className="h-5 w-5 text-accent" />Live trips
-                  <Badge variant="secondary" className="ml-auto">{trips.length} active</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {trips.map(t => {
-                  const r = getRoute(t.route_id); const b = getBus(t.bus_id);
-                  const remaining = Math.max(0, t.capacity - t.occupancy);
-                  const pct = Math.round((t.occupancy / t.capacity) * 100);
-                  const full = remaining === 0;
-                  return (
-                    <div key={t.id} className="rounded-2xl border bg-card p-4 transition hover:shadow-soft">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1 flex flex-wrap items-center gap-2">
-                            <span className="font-display font-bold">{r?.name ?? "Route"}</span>
-                            <Badge variant="outline" className="font-mono">{b?.bus_number ?? "—"}</Badge>
-                            {full ? <Badge variant="destructive">Full</Badge> : <Badge variant="secondary" className="capitalize">{t.status}</Badge>}
-                            {t.delay_minutes > 0 && <Badge variant="outline" className="border-warning text-warning"><AlertTriangle className="mr-1 h-3 w-3" />+{t.delay_minutes}m</Badge>}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground">{r?.origin}</span>
-                            <ArrowRight className="h-3.5 w-3.5" />
-                            <span className="font-medium text-foreground">{r?.destination}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-display text-2xl font-bold">{t.eta_minutes}m</div>
-                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">ETA</p>
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <Progress value={pct} />
-                        <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-                          <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{t.occupancy}/{t.capacity}</span>
-                          <span className={full ? "font-semibold text-destructive" : "font-semibold"}>{full ? "0 left" : `${remaining} left`}</span>
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        {full
-                          ? <Button onClick={() => joinQueue(t)} disabled={!!myActiveBooking} variant="outline" className="w-full"><Hourglass className="mr-2 h-4 w-4" />Join queue</Button>
-                          : <Button onClick={() => setConfirmTrip(t)} disabled={!!myActiveBooking} className="w-full bg-primary"><Ticket className="mr-2 h-4 w-4" />Book seat</Button>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* RIGHT */}
         <div className="space-y-6">
-          {myActiveBooking && myActiveTrip ? (
+          {myActive && myTrip ? (
             <Card id="ticket" className="overflow-hidden border-accent/40 shadow-glow scroll-mt-20">
               <CardHeader className="bg-amber-gradient text-accent-foreground">
                 <CardTitle className="flex items-center justify-between">
@@ -411,8 +383,8 @@ function StudentPage() {
               <CardContent className="grid place-items-center gap-3 p-6">
                 <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={myActiveBooking.qr_code} size={170} /></div>
                 <div className="text-center">
-                  <p className="font-display text-lg font-bold">{getBus(myActiveTrip.bus_id)?.bus_number} · {getRoute(myActiveTrip.route_id)?.name}</p>
-                  <p className="text-xs text-muted-foreground">{getRoute(myActiveTrip.route_id)?.origin} → {getRoute(myActiveTrip.route_id)?.destination}</p>
+                  <p className="font-display text-lg font-bold">{bus(myTrip.bus_id)?.bus_number} · {route(myTrip.route_id)?.name}</p>
+                  <p className="text-xs text-muted-foreground">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</p>
                   <p className="mt-2 text-xs text-muted-foreground">Show this QR to the marshal at boarding.</p>
                 </div>
                 <div className="grid w-full grid-cols-2 gap-2">
@@ -432,7 +404,9 @@ function StudentPage() {
               <CardContent><p className="text-sm text-muted-foreground">Pick a route or time slot on the left. Your QR ticket appears here after booking.</p></CardContent>
             </Card>
           )}
+          </Reveal>
 
+          <Reveal delay={0.15}>
           <Card id="notifications" className="shadow-soft scroll-mt-20">
             <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-accent" />Notifications</CardTitle></CardHeader>
             <CardContent className="space-y-2">
@@ -448,8 +422,9 @@ function StudentPage() {
               ))}
             </CardContent>
           </Card>
+          </Reveal>
 
-          <ReportIssueCard />
+          <Reveal delay={0.2}><ReportIssueCard /></Reveal>
         </div>
       </div>
 

@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Pulse transit" },
+      { name: "description", content: "Smart Campus Flow is a real-time university bus management system synchronizing students, admins, drivers, and marshals." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Pulse transit" },
+      { property: "og:description", content: "Smart Campus Flow is a real-time university bus management system synchronizing students, admins, drivers, and marshals." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Pulse transit" },
+      { name: "twitter:description", content: "Smart Campus Flow is a real-time university bus management system synchronizing students, admins, drivers, and marshals." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/490d5820-b385-4672-a43b-8bc3ba71af92/id-preview-6979baaf--9b3b5ddb-800a-4210-826c-eb7c7da1538a.lovable.app-1778586358059.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/490d5820-b385-4672-a43b-8bc3ba71af92/id-preview-6979baaf--9b3b5ddb-800a-4210-826c-eb7c7da1538a.lovable.app-1778586358059.png" },
     ],
     links: [
       {
