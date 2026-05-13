@@ -153,7 +153,7 @@ function StudentPage() {
         <div className="lg:col-span-2 space-y-6">
           <Card id="map" className="overflow-hidden shadow-soft scroll-mt-20">
             <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
-            <CardContent className="p-0"><LiveMap buses={activeBuses} /></CardContent>
+            <CardContent className="p-0"><LiveMap buses={activeBuses} trackBusId={myTrip?.status === "active" ? myTrip.bus_id : null} /></CardContent>
           </Card>
 
           <Card id="routes" className="shadow-soft scroll-mt-20">
