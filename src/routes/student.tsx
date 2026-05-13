@@ -106,6 +106,30 @@ function StudentPage() {
   const myTrip = myActive ? trips.find(t => t.id === myActive.trip_id) : undefined;
   const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
   const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
+  const myBus = myTrip ? buses.find(b => b.id === myTrip.bus_id) : undefined;
+  const liveDistanceKm = (geo.coords && myBus?.current_lat && myBus?.current_lng && myTrip?.status === "active")
+    ? haversineKm(geo.coords, { lat: myBus.current_lat, lng: myBus.current_lng })
+    : null;
+
+  // Distance-based proximity alerts
+  useEffect(() => {
+    if (!myTrip || myTrip.status !== "active") return;
+    const key = myTrip.id;
+    if (liveDistanceKm !== null) {
+      if (liveDistanceKm <= 0.5 && !distAlertedRef.current.has(key + ":500m")) {
+        distAlertedRef.current.add(key + ":500m");
+        toast.success("Bus within 500m", { description: "Head to your stop now.", duration: 9000 });
+      }
+      if (liveDistanceKm <= 1 && !distAlertedRef.current.has(key + ":1km")) {
+        distAlertedRef.current.add(key + ":1km");
+        toast("Bus within 1km", { description: "Get ready to board." });
+      }
+    }
+    if (myTrip.eta_minutes <= 5 && !distAlertedRef.current.has(key + ":5min")) {
+      distAlertedRef.current.add(key + ":5min");
+      toast("Arriving in ~5 minutes", { description: "Make your way to the pickup point." });
+    }
+  }, [liveDistanceKm, myTrip]);
 
   async function confirmBooking() {
     if (!user || !confirmTrip) return;
