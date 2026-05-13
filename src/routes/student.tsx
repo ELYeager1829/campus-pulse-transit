@@ -307,6 +307,7 @@ function StudentPage() {
           )}
           </Reveal>
 
+          <Reveal delay={0.15}>
           <Card id="notifications" className="shadow-soft scroll-mt-20">
             <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-accent" />Notifications</CardTitle></CardHeader>
             <CardContent className="space-y-2">
@@ -319,8 +320,9 @@ function StudentPage() {
               ))}
             </CardContent>
           </Card>
+          </Reveal>
 
-          <ReportIssueCard />
+          <Reveal delay={0.2}><ReportIssueCard /></Reveal>
         </div>
       </div>
 
