@@ -265,9 +265,11 @@ function StudentPage() {
               })}
             </CardContent>
           </Card>
+          </Reveal>
         </div>
 
         <div className="space-y-6">
+          <Reveal delay={0.1}>
           {myActive && myTrip ? (
             <Card id="ticket" className="overflow-hidden border-accent/40 shadow-glow scroll-mt-20">
               <CardHeader className="bg-amber-gradient text-accent-foreground">
@@ -281,6 +283,12 @@ function StudentPage() {
                 <div className="text-center">
                   <p className="font-display text-lg font-bold">{bus(myTrip.bus_id)?.bus_number} · {route(myTrip.route_id)?.name}</p>
                   <p className="text-xs text-muted-foreground">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</p>
+                  {liveDistanceKm !== null && (
+                    <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success"/>
+                      {liveDistanceKm < 1 ? `${Math.round(liveDistanceKm * 1000)} m away` : `${liveDistanceKm.toFixed(2)} km away`}
+                    </p>
+                  )}
                   <p className="mt-2 text-xs text-muted-foreground">Show this QR to the marshal at boarding.</p>
                 </div>
                 <div className="flex w-full gap-2">
@@ -297,6 +305,7 @@ function StudentPage() {
               <CardContent><p className="text-sm text-muted-foreground">Pick a route on the left to book a seat. Your QR ticket appears here after a successful booking.</p></CardContent>
             </Card>
           )}
+          </Reveal>
 
           <Card id="notifications" className="shadow-soft scroll-mt-20">
             <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-accent" />Notifications</CardTitle></CardHeader>
