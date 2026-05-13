@@ -71,9 +71,25 @@ function DriverPage() {
 
   async function endTrip(t: Trip) {
     await supabase.from("trips").update({ status: "completed", ended_at: new Date().toISOString() }).eq("id", t.id);
-    await supabase.from("buses").update({ status: "idle" }).eq("id", t.bus_id);
+    await supabase.from("buses").update({ status: "idle", current_lat: null, current_lng: null }).eq("id", t.bus_id);
     stopGps();
     toast.success("Trip completed");
+  }
+
+  async function cancelTrip(t: Trip) {
+    if (!confirm("Cancel this trip? All passengers will lose tracking.")) return;
+    await supabase.from("trips").update({ status: "cancelled", ended_at: new Date().toISOString() }).eq("id", t.id);
+    await supabase.from("buses").update({ status: "idle", current_lat: null, current_lng: null }).eq("id", t.bus_id);
+    // Notify booked passengers
+    const { data: bks } = await supabase.from("bookings").select("user_id").eq("trip_id", t.id).eq("status", "booked");
+    if (bks?.length) {
+      await supabase.from("notifications").insert(bks.map(b => ({
+        user_id: b.user_id, kind: "trip", title: "Trip cancelled",
+        body: "The driver cancelled this trip. Please book another.",
+      })));
+    }
+    stopGps();
+    toast.success("Trip cancelled");
   }
 
   function startGps(t: Trip) {
