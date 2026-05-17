@@ -169,11 +169,18 @@ function StudentPage() {
 
   const route = (id: string) => routes.find(r => r.id === id);
   const bus = (id: string) => buses.find(b => b.id === id);
+  const getRoute = route;
+  const getBus = bus;
   const activeBuses = buses.filter(b => b.current_lat && b.current_lng).map(b => ({ id: b.id, bus_number: b.bus_number, lat: b.current_lat!, lng: b.current_lng! }));
   const myActive = useMemo(() => bookings.find(b => b.status === "booked"), [bookings]);
+  const myActiveBooking = myActive;
   const myTrip = myActive ? trips.find(t => t.id === myActive.trip_id) : undefined;
+  const myActiveTrip = myTrip;
   const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
   const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
+  const geo = { ...useGeolocation(), get coords() { return null as never; } } as ReturnType<typeof useGeolocation>;
+  const slotsToday = useMemo(() => buildSlots(now), [now]);
+  const groupedSlots = useMemo(() => groupBy(slotsToday, s => s.routeName), [slotsToday]);
 
   async function confirmBooking() {
     if (!user || !confirmTrip) return;
