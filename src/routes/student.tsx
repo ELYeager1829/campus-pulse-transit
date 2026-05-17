@@ -19,7 +19,20 @@ import { useAuth } from "@/lib/auth";
 import { useGeolocation, haversineKm } from "@/hooks/use-geolocation";
 import { Reveal } from "@/components/Reveal";
 
-export const Route = createFileRoute("/student")({ component: StudentPage });
+export const Route = createFileRoute("/student")({
+  head: () => ({
+    meta: [
+      { title: "Student dashboard — CampusBus" },
+      { name: "description", content: "Browse routes, book your seat, board with QR and track your bus live." },
+      { property: "og:title", content: "Student dashboard — CampusBus" },
+      { property: "og:description", content: "Book seats, view live ETAs and board with QR." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/student" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/student" }],
+  }),
+  component: StudentPage,
+});
 
 // ── routes.json inlined ────────────────────────────────────────────────────
 const ROUTES_DATA = {
