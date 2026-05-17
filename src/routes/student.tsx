@@ -402,7 +402,6 @@ function StudentPage() {
               <CardContent><p className="text-sm text-muted-foreground">Pick a route or time slot on the left. Your QR ticket appears here after booking.</p></CardContent>
             </Card>
           )}
-          </Reveal>
 
           <Reveal delay={0.15}>
           <Card id="notifications" className="shadow-soft scroll-mt-20">
