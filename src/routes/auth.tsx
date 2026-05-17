@@ -57,6 +57,8 @@ function AuthPage() {
 
       <div className="flex items-center justify-center p-6 md:p-12">
         <div className="w-full max-w-md">
+          <h1 className="font-display text-2xl font-bold mb-2">Sign in or create your CampusBus account</h1>
+          <p className="mb-4 text-sm text-muted-foreground">Choose a tab below to sign in or register as a student, driver, marshal or admin.</p>
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign in</TabsTrigger>
