@@ -1,0 +1,8 @@
+# CampusBus
+
+> Smart campus bus management for Tshwane University of Technology — realtime tracking, QR boarding, seat booking and queue management for students, drivers, marshals and admins.
+
+## Pages
+
+- [Home](/): Overview, features and routes for the CampusBus service.
+- [Sign in / Create account](/auth): Account access for students, drivers, marshals and admins.
