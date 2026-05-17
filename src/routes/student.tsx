@@ -182,9 +182,6 @@ function StudentPage() {
   const geo = useGeolocation();
   const slotsToday = useMemo(() => buildSlots(now), [now]);
   const groupedSlots = useMemo(() => groupBy(slotsToday, s => s.routeName), [slotsToday]);
-  const geo = useGeolocation();
-  const slotsToday = useMemo(() => buildSlots(now), [now]);
-  const groupedSlots = useMemo(() => groupBy(slotsToday, s => s.routeName), [slotsToday]);
 
   async function confirmBooking() {
     if (!user || !confirmTrip) return;
