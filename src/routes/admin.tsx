@@ -16,7 +16,20 @@ import { Bus, Users, AlertTriangle, Activity, CheckCircle2, Wrench, Plus, Trash2
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
-export const Route = createFileRoute("/admin")({ component: AdminPage });
+export const Route = createFileRoute("/admin")({
+  head: () => ({
+    meta: [
+      { title: "Admin dashboard — CampusBus" },
+      { name: "description", content: "Manage buses, routes, people and issues across the CampusBus network." },
+      { property: "og:title", content: "Admin dashboard — CampusBus" },
+      { property: "og:description", content: "Maintenance and oversight tools for CampusBus administrators." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/admin" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/admin" }],
+  }),
+  component: AdminPage,
+});
 
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; eta_minutes: number; delay_minutes: number; }
 interface BusRow { id: string; bus_number: string; capacity: number; status: string; current_lat: number | null; current_lng: number | null; }
