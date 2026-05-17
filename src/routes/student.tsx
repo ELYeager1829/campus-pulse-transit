@@ -387,7 +387,7 @@ function StudentPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid place-items-center gap-3 p-6">
-                <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={myActiveBooking.qr_code} size={170} /></div>
+                <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={myActiveBooking!.qr_code} size={170} /></div>
                 <div className="text-center">
                   <p className="font-display text-lg font-bold">{bus(myTrip.bus_id)?.bus_number} · {route(myTrip.route_id)?.name}</p>
                   <p className="text-xs text-muted-foreground">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</p>
