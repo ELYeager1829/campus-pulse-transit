@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /driver
+Disallow: /marshal
+Disallow: /student
+
+Sitemap: https://campus-pulse-transit.lovable.app/sitemap.xml
