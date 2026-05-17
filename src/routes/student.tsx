@@ -178,7 +178,7 @@ function StudentPage() {
   const myActiveTrip = myTrip;
   const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
   const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
-  const geo = { ...useGeolocation(), get coords() { return null as never; } } as ReturnType<typeof useGeolocation>;
+  const geo = useGeolocation();
   const slotsToday = useMemo(() => buildSlots(now), [now]);
   const groupedSlots = useMemo(() => groupBy(slotsToday, s => s.routeName), [slotsToday]);
 
