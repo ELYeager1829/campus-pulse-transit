@@ -14,7 +14,20 @@ import { toast } from "sonner";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { formatDistanceToNow } from "date-fns";
 
-export const Route = createFileRoute("/marshal")({ component: MarshalPage });
+export const Route = createFileRoute("/marshal")({
+  head: () => ({
+    meta: [
+      { title: "Marshal dashboard — CampusBus" },
+      { name: "description", content: "Scan QR tickets, manage boarding and review check-ins as a CampusBus marshal." },
+      { property: "og:title", content: "Marshal dashboard — CampusBus" },
+      { property: "og:description", content: "Boarding and check-in tools for CampusBus marshals." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/marshal" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/marshal" }],
+  }),
+  component: MarshalPage,
+});
 
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; }
 interface BusRow { id: string; bus_number: string; }
