@@ -11,10 +11,34 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Smart Campus Bus — Live university transport" },
-      { name: "description", content: "Realtime bus tracking, QR boarding, seat booking, and queue management for your campus." },
-      { property: "og:title", content: "Smart Campus Bus — Live university transport" },
-      { property: "og:description", content: "Track buses live, book seats, and board with QR — built for students, drivers, marshals and admins." },
+      { title: "CampusBus — Live university transport for TUT" },
+      { name: "description", content: "Realtime bus tracking, QR boarding, seat booking, and queue management for TUT students, drivers, marshals and admins." },
+      { property: "og:title", content: "CampusBus — Live university transport" },
+      { property: "og:description", content: "Track buses live, book seats, and board with QR — built for TUT campuses." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "CampusBus",
+              url: "https://campus-pulse-transit.lovable.app/",
+              description: "Smart campus bus management for Tshwane University of Technology.",
+            },
+            {
+              "@type": "WebSite",
+              name: "CampusBus",
+              url: "https://campus-pulse-transit.lovable.app/",
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: Landing,

@@ -15,7 +15,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { formatDistanceToNow } from "date-fns";
 
-export const Route = createFileRoute("/driver")({ component: DriverPage });
+export const Route = createFileRoute("/driver")({
+  head: () => ({
+    meta: [
+      { title: "Driver dashboard — CampusBus" },
+      { name: "description", content: "Start trips, broadcast live location and manage your route as a CampusBus driver." },
+      { property: "og:title", content: "Driver dashboard — CampusBus" },
+      { property: "og:description", content: "Live operations console for CampusBus drivers." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/driver" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/driver" }],
+  }),
+  component: DriverPage,
+});
 
 interface Trip { id: string; bus_id: string; route_id: string; status: string; occupancy: number; capacity: number; driver_id: string | null; }
 interface BusRow { id: string; bus_number: string; driver_id: string | null; current_lat?: number | null; current_lng?: number | null; }

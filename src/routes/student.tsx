@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeCanvas } from "qrcode.react";
-import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass, XCircle } from "lucide-react";
+import { Bus, Clock, MapPin, Users, Ticket, Bell, AlertTriangle, CheckCircle2, Loader2, ArrowRight, Hourglass, XCircle, MapPinOff, Navigation, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -19,7 +19,20 @@ import { useAuth } from "@/lib/auth";
 import { useGeolocation, haversineKm } from "@/hooks/use-geolocation";
 import { Reveal } from "@/components/Reveal";
 
-export const Route = createFileRoute("/student")({ component: StudentPage });
+export const Route = createFileRoute("/student")({
+  head: () => ({
+    meta: [
+      { title: "Student dashboard — CampusBus" },
+      { name: "description", content: "Browse routes, book your seat, board with QR and track your bus live." },
+      { property: "og:title", content: "Student dashboard — CampusBus" },
+      { property: "og:description", content: "Book seats, view live ETAs and board with QR." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/student" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/student" }],
+  }),
+  component: StudentPage,
+});
 
 // ── routes.json inlined ────────────────────────────────────────────────────
 const ROUTES_DATA = {
@@ -113,6 +126,9 @@ function StudentPage() {
   const [now, setNow] = useState(new Date());
   const alertedRef = useRef<Record<string, Set<number>>>({});
 
+  const myActiveBooking = useMemo(() => bookings.find(b => b.status === "booked"), [bookings]);
+  const myActiveTrip = myActiveBooking ? trips.find(t => t.id === myActiveBooking.trip_id) : undefined;
+
   // Request student geolocation for ETA accuracy
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
@@ -169,11 +185,16 @@ function StudentPage() {
 
   const route = (id: string) => routes.find(r => r.id === id);
   const bus = (id: string) => buses.find(b => b.id === id);
+  const getRoute = route;
+  const getBus = bus;
   const activeBuses = buses.filter(b => b.current_lat && b.current_lng).map(b => ({ id: b.id, bus_number: b.bus_number, lat: b.current_lat!, lng: b.current_lng! }));
-  const myActive = useMemo(() => bookings.find(b => b.status === "booked"), [bookings]);
-  const myTrip = myActive ? trips.find(t => t.id === myActive.trip_id) : undefined;
+  const myActive = myActiveBooking;
+  const myTrip = myActiveTrip;
   const justBooked = bookingId ? bookings.find(b => b.id === bookingId) : null;
   const justBookedTrip = justBooked ? trips.find(t => t.id === justBooked.trip_id) : null;
+  const geo = useGeolocation();
+  const slotsToday = useMemo(() => buildSlots(now), [now]);
+  const groupedSlots = useMemo(() => groupBy(slotsToday, s => s.routeName), [slotsToday]);
 
   async function confirmBooking() {
     if (!user || !confirmTrip) return;
@@ -293,8 +314,6 @@ function StudentPage() {
             <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
             <CardContent className="p-0"><LiveMap buses={activeBuses} /></CardContent>
           </Card>
-          </Reveal>
-
           <Card id="routes" className="shadow-soft scroll-mt-20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -381,7 +400,7 @@ function StudentPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid place-items-center gap-3 p-6">
-                <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={myActiveBooking.qr_code} size={170} /></div>
+                <div className="rounded-2xl bg-white p-4 shadow-soft"><QRCodeCanvas value={myActiveBooking!.qr_code} size={170} /></div>
                 <div className="text-center">
                   <p className="font-display text-lg font-bold">{bus(myTrip.bus_id)?.bus_number} · {route(myTrip.route_id)?.name}</p>
                   <p className="text-xs text-muted-foreground">{route(myTrip.route_id)?.origin} → {route(myTrip.route_id)?.destination}</p>
@@ -404,7 +423,6 @@ function StudentPage() {
               <CardContent><p className="text-sm text-muted-foreground">Pick a route or time slot on the left. Your QR ticket appears here after booking.</p></CardContent>
             </Card>
           )}
-          </Reveal>
 
           <Reveal delay={0.15}>
           <Card id="notifications" className="shadow-soft scroll-mt-20">

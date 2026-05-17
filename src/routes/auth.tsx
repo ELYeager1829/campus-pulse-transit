@@ -11,7 +11,16 @@ import { toast } from "sonner";
 import { useAuth, dashboardPath, type AppRole } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — CampusBus" }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in or create an account — CampusBus" },
+      { name: "description", content: "Sign in to CampusBus or create a new account as a student, driver, marshal or admin." },
+      { property: "og:title", content: "Sign in — CampusBus" },
+      { property: "og:description", content: "Access your CampusBus dashboard for live transport, bookings and trip management." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/auth" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/auth" }],
+  }),
   component: AuthPage,
 });
 
@@ -48,6 +57,8 @@ function AuthPage() {
 
       <div className="flex items-center justify-center p-6 md:p-12">
         <div className="w-full max-w-md">
+          <h1 className="font-display text-2xl font-bold mb-2">Sign in or create your CampusBus account</h1>
+          <p className="mb-4 text-sm text-muted-foreground">Choose a tab below to sign in or register as a student, driver, marshal or admin.</p>
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign in</TabsTrigger>
