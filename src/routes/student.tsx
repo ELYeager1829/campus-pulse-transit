@@ -113,6 +113,9 @@ function StudentPage() {
   const [now, setNow] = useState(new Date());
   const alertedRef = useRef<Record<string, Set<number>>>({});
 
+  const myActiveBooking = useMemo(() => bookings.find(b => b.status === "booked"), [bookings]);
+  const myActiveTrip = myActiveBooking ? trips.find(t => t.id === myActiveBooking.trip_id) : undefined;
+
   // Request student geolocation for ETA accuracy
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
