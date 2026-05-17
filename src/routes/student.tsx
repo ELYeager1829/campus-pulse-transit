@@ -293,8 +293,6 @@ function StudentPage() {
             <CardHeader className="flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" />Live map</CardTitle><Badge variant="secondary">{activeBuses.length} buses live</Badge></CardHeader>
             <CardContent className="p-0"><LiveMap buses={activeBuses} /></CardContent>
           </Card>
-          </Reveal>
-
           <Card id="routes" className="shadow-soft scroll-mt-20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
