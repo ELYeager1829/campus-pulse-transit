@@ -11,7 +11,16 @@ import { toast } from "sonner";
 import { useAuth, dashboardPath, type AppRole } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — CampusBus" }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in or create an account — CampusBus" },
+      { name: "description", content: "Sign in to CampusBus or create a new account as a student, driver, marshal or admin." },
+      { property: "og:title", content: "Sign in — CampusBus" },
+      { property: "og:description", content: "Access your CampusBus dashboard for live transport, bookings and trip management." },
+      { property: "og:url", content: "https://campus-pulse-transit.lovable.app/auth" },
+    ],
+    links: [{ rel: "canonical", href: "https://campus-pulse-transit.lovable.app/auth" }],
+  }),
   component: AuthPage,
 });
 
